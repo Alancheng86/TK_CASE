@@ -344,7 +344,9 @@ while (1)
 //				KEY_adjust();				
 			pic_num++;	
             break;	
-		}					 
+		}
+		default:
+			showbmp (pic_num);              DelayMs(300);   break;
 	 } 
 	 PassKey();
 			 
