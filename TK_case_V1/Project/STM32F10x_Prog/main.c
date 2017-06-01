@@ -222,9 +222,9 @@ while (1)
     //ShowTxt("60,20,80,TK_test");	  				 DelayMs(150);		
 		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
 		
-		ShowData_hex("30,450,1000", OTP_VALUE1);			   DelayMs(80);
-		ShowData_hex("30,450,1030", OTP_VALUE2);			   DelayMs(80);
-		ShowData_hex("30,450,1060", OTP_TIMES);			     DelayMs(80);
+//		ShowData_hex("30,450,1000", OTP_VALUE1);			   DelayMs(80);
+//		ShowData_hex("30,450,1030", OTP_VALUE2);			   DelayMs(80);
+//		ShowData_hex("30,450,1060", OTP_TIMES);			     DelayMs(80);
 	
 		switch(OTP_TIMES)
 		{
