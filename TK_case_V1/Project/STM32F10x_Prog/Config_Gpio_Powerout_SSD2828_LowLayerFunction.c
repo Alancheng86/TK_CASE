@@ -304,217 +304,6 @@ void V3ADJ_SET(char vset,char plus50mv)
 }
 
 /*******************************************************************************
-* Function Name  : void ShowData_hex(char *p,u16 dat)   
-* Description    : 十六進制顯示
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/  
-
-void ShowData_hex(char *p,u16 dat)    //十六進制顯示
-	 { 
-	  char str1[]="123,456,789";
-		char str2[20]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-		u8 j=0;
-	//	u8 tm1,tm2;
-	//u16 tep=dat;	
-		strcpy(str1,p); 
-			
-		 do { str2[j]=str1[j];}
-		 while (str1[++j] !=0) ;
-
-       str2[j++] =44;   //,
-		   str2[j++] =79;   
-		   str2[j++] =120;
-		   if((dat/16)<0x0a)				 
-			 {str2[j++]=dat/16+0x30;}
-			 else
-			 {str2[j++]=dat/16+0x37;}
-		   if((dat%16)<0x0a)	       			 
-       {str2[j++]=dat%16+0x30;}
-	     else
-       {str2[j++]=dat%16+0x37;}
-       str2[j]='\0';
-		   
-		 ShowTxt(str2);
-	 } 
-    
-  
-/*******************************************************************************
-* Function Name  : void ShowData(char *p,u16 dat)      
-* Description    : 十進制顯示
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/   
-  
-void ShowData(char *p,u16 dat)     //十進制顯示
-	 { u8 i,j,k,m;
-		 u16 tep;
-	  char str1[]="123,456,789";
-		char str2[20]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-		char strt [8]; 
-		strcpy(str1,p); 
-		//strcpy(str2,"")
-
-		tep= dat;
-    if (tep==0)	i=1;
-			else i=0;
-		 while(tep)
-		 { tep /=10;
-			 i++;		 
-		 }
-		 j=0;
-		 do { str2[j]=str1[j];j++;}
-		 while (str1[j] !=0) ;
-		 // {}
-		 m=i+j; 
-		 tep=dat;
-		 for (k=0;k<i;k++)
-		 {
-			 str2[m]=tep%10+48;
-			 m--;
-			 tep /=10;
-		 }
-		 str2[m] =44;
-		// j++;
-		 ShowTxt(str2);
-	 }
-//----------------------------- 
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^	
-void ShowData_ua2ma_4bitfloat(char *p,u16 dat)     //4位电流显示，dat=dat/100，以正确显示ma
-/************************************************************************************************
-*   ShowData_ua2ma_4bitfloat("38,200,149",9);
-*		ShowData_ua2ma_4bitfloat("38,200,199",79);
-*		ShowData_ua2ma_4bitfloat("38,200,249",1899);
-*		ShowData_ua2ma_4bitfloat("38,200,299",19955);
-*		ShowData_ua2ma_4bitfloat("38,200,349",798);      电流只显示4位
-****************************************************************************************************/
-	 { u8 i,j,m;
-		 u16 tep;
-	  char str1[]="123,456,789";  //存放显示地址
-		char str2[20]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};   //存放地址和待显示数据
-		//char strt [8]; 
-		strcpy(str1,p); 
-		i=4;   //显示数据的个数，总共显示4位
-		j=0;
-		do { str2[j]=str1[j];j++;}
-		while (str1[j] !=0) ;   //j存放显示地址的字符个数
-		 // {}
-		m=i+j;   //总共要显示的字符个数
-		tep=dat;
-		 if  (tep <10000)  //电流小于100ma时，保留2位小数
-		 { m++; //增加一位，供小数点使用；asicc 46 = .
-				
-//			 for (k=0;k<i;k++)
-//					 {
-//						 str2[m]=tep%10+48;
-//						 m--;
-//						 tep /=10;
-//					 }
-			 
-						 str2[m]=tep%10+48;
- 						 m--;
- 						 tep /=10;
-						 str2[m]=tep%10+48;
- 						 m--;
- 						 tep /=10;
-			       str2[m]=46;  //asicc 46 = .
- 						 m--;
-			       str2[m]=tep%10+48;
- 						 m--;
-			       tep /=10;
-			 
-						 tep=tep%10;
-			       if (tep==0) tep=14;
-						 else tep +=48;
-			       str2[m]=tep;
- 						 m--;
-		 }
-		 else  //电流>=100ma时，保留1位小数
-		 {  m++; //增加一位，供小数点使用；asicc 46 = .
-						
-            
-      			 tep+=5;
-			       tep /=10;      //舍弃最低位
-			 
-      			 str2[m]=tep%10+48;
- 						 m--;
- 						 tep /=10;
-			       
-			       str2[m]=46;  //asicc 46 = .
- 						 m--;
-			 
-						 str2[m]=tep%10+48;
- 						 m--; tep /=10;
-			      
-			       str2[m]=tep%10+48;
- 						 m--; tep /=10;
-             
-			       str2[m]=tep%10+48;
- 						 m--;
-		 }
-		 
-		 str2[m] =44;  // ascii 44 = ,
-		// j++;
-		 ShowTxt(str2);
-	 }
-	 
-void ShowData_uV2V_4bitfloat(char *p,u16 dat)     //4位电流显示，dat=dat/100，以正确显示ma
-/**********************************************
-* ShowData_uV2V_4bitfloat("38,200,99",3156); 在200，99处显示字体大小为38的 “3.156” 字样
-*该函数不能用于UA显示
-************************************************/	 
-	 { u8 i,j,m;
-		 u16 tep;
-	  char str1[]="123,456,789";  //存放显示地址
-		char str2[20]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};   //存放地址和待显示数据
-		
-		strcpy(str1,p); 
-		i=4;   //显示数据的个数，总共显示4位			
-			
-		j=0;
-		do { str2[j]=str1[j];j++;}
-		while (str1[j] !=0) ;   //j存放显示地址的字符个数
-		 // {}
-		m=i+j;   //总共要显示的字符个数
-		tep=dat;
-		if ((dat<1200)|(dat>10000))   //如果待显示电压低于 1.2v 或大于10V则报错	
-         { m=j;
-					 str2[m]=44; m++;  str2[m]=120; m++;  str2[m]=88;m++;   str2[m]=88;m++; str2[m]=63; 
-				 }  
-		else
-			   { 
-							{ m++; //增加一位，供小数点使用；asicc 46 = .
-							 
-											 str2[m]=tep%10+48;      //倒数第一位
-											 m--;
-											 tep /=10;
-																		
-											 str2[m]=tep%10+48;       //倒数第二位
-											 m--;
-											 tep /=10;	
-								
-											 str2[m]=tep%10+48;       //倒数第三位
-											 m--;
-											 tep /=10;	
-								
-											 str2[m]=46;  //asicc 46 = .    //小数点
-											 m--;	
-								
-											 tep=tep%10;
-											 tep +=48;
-											 str2[m]=tep;
-											 m--;
-								}
-								str2[m] =44;  // ascii 44 = ,
-				 
-				 }
-		 ShowTxt(str2);
-	 }
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^	
-
-/*******************************************************************************
 * Function Name  : LCD_CtrlLinesConfig
 * Description    : Configures LCD Control lines (FSMC Pins) in alternate function
                    Push-Pull mode.
@@ -539,13 +328,13 @@ void LCD_CtrlLinesConfig(void)
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	
 	/*[把PA 对应端口配置成输出模式] */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 |GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_8| GPIO_Pin_9| GPIO_Pin_10| GPIO_Pin_11| GPIO_Pin_12| GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0| GPIO_Pin_1 |GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 |  GPIO_Pin_7| GPIO_Pin_8| GPIO_Pin_9| GPIO_Pin_10| GPIO_Pin_11| GPIO_Pin_12| GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//GPIO最高速度50MHz
 	GPIO_Init(GPIOA, &GPIO_InitStructure);  
 	
 	/*[把PC 对应端口配置成输出模式] */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_7  | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_4| GPIO_Pin_7  | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//GPIO最高速度50MHz
 	GPIO_Init(GPIOC, &GPIO_InitStructure); 
@@ -603,15 +392,12 @@ void KEYGPIO_Init(void)
 	GPIO_Init(GPIOB, &GPIO_InitStructure); 
 	
 	/*[把GPIOB 对应端口配置成输出模式] */
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_8 |GPIO_Pin_9 | GPIO_Pin_10  |GPIO_Pin_11 ;
+	GPIO_InitStructure.GPIO_Pin =   GPIO_Pin_10  |GPIO_Pin_11 ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_12; 
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
 //	/*[把KEYGPIO 配置成输入模式] */
 //	GPIO_InitStructure.GPIO_Pin =   GPIO_Pin_10 | GPIO_Pin_11;
 //	GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_IN_FLOATING;    // 
@@ -644,7 +430,6 @@ void DelayKEY (u32 k)
 			  }            
          }	
 }
-
 
 void USART_REMAP_GPIO_Configuration(void)    //PB6\PB7
 {
@@ -692,75 +477,48 @@ void USART_REMAP_GPIO_Configuration(void)    //PB6\PB7
 }
 
 void USART_GPIO_Configuration(void)
-{ 
-	GPIO_InitTypeDef GPIO_InitStructure;
-	USART_InitTypeDef USART_InitStructure;
-  USART_ClockInitTypeDef  USART_ClockInitStructure;	
-	
-  /* Configure USARTx  Tx as alternate function push-pull */
-  GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  /* Configure USARTx  Rx as input floating */
-  GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);	
-	
-	
-  
-
-  
-
-/* USART1 configuration ------------------------------------------------------*/
-  /* USART1 configured as follow:
+{ USART_InitTypeDef USART_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure;
+	 /* USARTx configured as follow:
         - BaudRate = 115200 baud  
         - Word Length = 8 Bits
         - One Stop Bit
         - No parity
         - Hardware flow control disabled (RTS and CTS signals)
         - Receive and transmit enabled
-        - USART Clock disabled
-        - USART CPOL: Clock is active low
-        - USART CPHA: Data is captured on the middle 
-        - USART LastBit: The clock pulse of the last data bit is not output to 
-                         the SCLK pin
   */
-USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;			//时钟低电平活动
-USART_ClockInitStructure.USART_CPOL = USART_CPOL_Low;				//时钟低电平，与Clock搭配
-USART_ClockInitStructure.USART_CPHA = USART_CPHA_2Edge;				//时钟第二个边沿进行数据捕获
-USART_ClockInitStructure.USART_LastBit = USART_LastBit_Disable;		//最后一位数据的时钟脉冲从不SCLK输出
-/* Configure the USART1 synchronous paramters */
-USART_ClockInit(USART1, &USART_ClockInitStructure);
+  USART_InitStructure.USART_BaudRate = 57600;
+  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+  USART_InitStructure.USART_StopBits = USART_StopBits_1;
+  USART_InitStructure.USART_Parity = USART_Parity_No;
+  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 
-USART_InitStructure.USART_BaudRate =115200;
-USART_InitStructure.USART_WordLength = USART_WordLength_8b;			//8位数据
-USART_InitStructure.USART_StopBits = USART_StopBits_1;				//在帧结尾传输1个停止位
-USART_InitStructure.USART_Parity = USART_Parity_No ; //奇偶校验一旦使能，在发送的MSB位插入经计算的奇偶位    
-USART_InitStructure.USART_HardwareFlowControl = 
-USART_HardwareFlowControl_None;									   //硬件流控制失能
-
-USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-/* Configure USART1 basic and asynchronous paramters */
-USART_Init(USART1, &USART_InitStructure);
-   
-// 	USART_ITConfig(USART1,USART_IT_TXE ,DISABLE);	
-	USART_ITConfig(USART1,USART_IT_RXNE, ENABLE);  
-    
-  /* Enable USART1 */
-  USART_Cmd(USART1, ENABLE);
+  USART_Init(USARTx, &USART_InitStructure);
 	
-  /* Enable the USART1 Pins Software Remapping */
-  GPIO_PinRemapConfig(GPIO_Remap_USART1, DISABLE);
-
+	 /* Enable USART1 Receive and Transmit interrupts */
+  USART_ITConfig(USARTx, USART_IT_RXNE, ENABLE);
+  //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+	
+	USART_Cmd(USARTx, ENABLE);
+	
 	//-------------------------------------------------------------------------
-//#if defined(USE_USART1_REMAP)  
-//  /* Enable the USART1 Pins Software Remapping */
-//  GPIO_PinRemapConfig(GPIO_Remap_USART1, DISABLE);
-//#endif
+#if defined(USE_USART1_REMAP)  
+  /* Enable the USART1 Pins Software Remapping */
+  GPIO_PinRemapConfig(GPIO_Remap_USART1, ENABLE);
+#endif
   
+  /* Configure USARTx  Tx as alternate function push-pull */
+  GPIO_InitStructure.GPIO_Pin =  GPIO_TxPin;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_Init(GPIOx, &GPIO_InitStructure);
 
+  /* Configure USARTx  Rx as input floating */
+  GPIO_InitStructure.GPIO_Pin =  GPIO_RxPin;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  GPIO_Init(GPIOx, &GPIO_InitStructure);
 }
+
 
 

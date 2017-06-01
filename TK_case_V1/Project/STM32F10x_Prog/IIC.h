@@ -10,8 +10,8 @@
 
 
 #define PIN_SCL1  GPIO_Pin_15
-#define PIN_SDA1  GPIO_Pin_10
-#define GPIO_EEPROM_SDA                                  GPIOC
+#define PIN_SDA1  GPIO_Pin_3
+#define GPIO_EEPROM_SDA                                  GPIOB
 #define GPIO_EEPROM_SCL                                  GPIOA
 #define RCC_APB2Periph_GPIO_EEPROM    RCC_APB2Periph_GPIOA
 

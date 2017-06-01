@@ -10,7 +10,7 @@
       <TargetName>STM3210E_LCD</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060422::V5.06 update 4 (build 422)::ARMCC</pCCUsed>
+      <pCCUsed>5060061::V5.06 update 1 (build 61)::ARMCC</pCCUsed>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32F103RE</Device>
@@ -46,7 +46,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\STM3210E-LCD_XL\</OutputDirectory>
-          <OutputName>080WQ18_TK_V1_JD9366</OutputName>
+          <OutputName>LVDS20_DEMO107_A1</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -172,11 +172,11 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4098</DriverSelection>
+            <DriverSelection>4099</DriverSelection>
           </Flash1>
-          <bUseTDR>1</bUseTDR>
+          <bUseTDR>0</bUseTDR>
           <Flash2>Segger\JL2CM3.dll</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -499,14 +499,19 @@
               <FilePath>..\LCD.c</FilePath>
             </File>
             <File>
+              <FileName>IIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\IIC.c</FilePath>
+            </File>
+            <File>
               <FileName>Config_Gpio_Powerout_SSD2828_LowLayerFunction.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Config_Gpio_Powerout_SSD2828_LowLayerFunction.c</FilePath>
             </File>
             <File>
-              <FileName>OTP.c</FileName>
+              <FileName>T226.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\OTP.c</FilePath>
+              <FilePath>..\T226.c</FilePath>
             </File>
             <File>
               <FileName>tsliic_rev_c.lib</FileName>
@@ -514,19 +519,44 @@
               <FilePath>..\tsliic_rev_c.lib</FilePath>
             </File>
             <File>
-              <FileName>V_SET_c1025.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\V_SET_c1025.c</FilePath>
+              <FileName>SDFAT.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\SDFAT.lib</FilePath>
             </File>
             <File>
-              <FileName>E24C16IIC.c</FileName>
+              <FileName>disp.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\E24C16IIC.c</FilePath>
+              <FilePath>..\disp.c</FilePath>
             </File>
             <File>
-              <FileName>T226_1022.c</FileName>
+              <FileName>V_SET_C.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\T226_1022.c</FilePath>
+              <FilePath>..\V_SET_C.c</FilePath>
+            </File>
+            <File>
+              <FileName>keyscan_adc_B.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\keyscan_adc_B.c</FilePath>
+            </File>
+            <File>
+              <FileName>hfz_secret.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hfz_secret.c</FilePath>
+            </File>
+            <File>
+              <FileName>LVDS_I2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\LVDS_I2C.c</FilePath>
+            </File>
+            <File>
+              <FileName>Mtransmit.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Mtransmit.c</FilePath>
+            </File>
+            <File>
+              <FileName>LVDS_OTP.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\LVDS_OTP.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -35,7 +35,7 @@
 #define COMMAND_ID_INDEX	0xFF
 /* Includes ------------------------------------------------------------------*/
 //******************************************************************************
-//				for   use   2014-10-24
+//				for   use   2014-9-20
 //******************************************************************************
 typedef   unsigned char   BYTE;
 typedef   unsigned short  WORD;
@@ -61,25 +61,9 @@ typedef enum {FALSE = 0, TRUE = !FALSE} bool;
 #define KEY_DOWN      GPIOB->IDR&GPIO_Pin_14
 
 
+
+
 void T226_GPIO_Config(void);
-
-
-void EEpromRead_CurrentCalibration(void);
-u8 Measure_I_5TimesForProtectIDD(u32 dat1);
-u8 Measure_I_5TimesForProtectIDDIO(u32 dat1);
-
-
-
-
-
-
-bool T226_I2CSend(BYTE ucDeviceAddr, BYTE ucIndex, BYTE* pucData, unsigned int unDataLength);
-bool T226_I2CReceive(BYTE ucDeviceAddr, BYTE ucIndex, BYTE* pucData, unsigned int unDataLength);
-
-unsigned int M9_BUS_VOLTAGE(void);
-unsigned int M12_BUS_VOLTAGE(void);
-void T226_intion(void);
-
 
 void USART_SEND_DEC(u16 data);
 void PA910SPISendValueofCurrent(char *p,u32 datcf);
@@ -92,18 +76,22 @@ void PA910SPISendValueofCurrent(char *p,u32 datcf);
 *********************************************************************************************************/
 
 
+
+bool T226_I2CSend(BYTE ucDeviceAddr, BYTE ucIndex, BYTE* pucData, unsigned int unDataLength);
+bool T226_I2CReceive(BYTE ucDeviceAddr, BYTE ucIndex, BYTE* pucData, unsigned int unDataLength);
+
+unsigned int M9_BUS_VOLTAGE(void);
+unsigned int M12_BUS_VOLTAGE(void);
+void T226_intion(void);
+
 u16 Measure_IDD(u8 gears);
 u16 Measure_IDDIO(u8 gears);
 
-//u16 Measure_IDD_once(u8 gears);
-//u16 Measure_IDDIO_once(u8 gears);
-void RESTORE_CALIBRATION(void);
-void STORE_CALIBRATION(void);   
+u16 Measure_IDD_once(u8 gears);
+u16 Measure_IDDIO_once(u8 gears);
+u16 Measure_IDD_for_start(u8 gears);
 void AUTO_CALIBRATION(void);
 void GET_PRESENT(void);
-
-void NORML_CAL_TEST(void);
-void SLEEP_CAL_TEST(void);
 //-----------------------------------------------------------------------
 #endif
 

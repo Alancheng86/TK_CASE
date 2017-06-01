@@ -55,7 +55,7 @@ void EXTI_Configuration();
 void V3ADJ_SET(char vset,char plus50mv);
 void STM_MINI_SET(void);
 void STM32_Init_SSD2828(void);
-
+void PG_inition_lcd(void);
 void SSD2828_Inition(void);
 void MIPI_SPI_Write(uint i,...);
 
@@ -68,7 +68,7 @@ void SSD2828_VIDEO_MODE_HS(void);
 
 void Forward_scan(void);
 void Backward_scan(void);
-void SSD2828_inition_lcd_Check(void); 
+
 u16  READ_SSD2828(u8 CMD);
 u8 READ_IC(u8 cmd,u8 cmd1);
 u8 READ_IC_A(u8 cmd,u8 cmd1);  //读2828从LCD ic中取回来的值
@@ -90,9 +90,37 @@ void enter_sleep_mode(void);
 void exit_sleep_mode(void);
 void reset_lcd (void);
 
-void LCD_Vol_SET(void);
-
 void SEND_DATA_OnlyFor045LF(int sum,u8 data_buf[]);
+
+
+
+
+
+
+
+
+#define Line0          0
+#define Line1          24
+#define Line2          48
+#define Line3          72
+#define Line4          96
+#define Line5          120
+#define Line6          144
+#define Line7          168
+#define Line8          192
+#define Line9          216
+
+
+
+
+
+
+
+
+
+
+
+
 
 //===========================
 void ID_set(void);
@@ -109,5 +137,8 @@ void BEEP_Dudu(void);
 void BEEP_BIBI(void);
 void BEEP_XiXi(void);
 void BEEP_HuHu(void);
+void BACK_LIGHT_OFF(void);
+void BACK_LIGHT_ON(void);
+
 #endif /* __LCD_H */
 /******************* (C) COPYRIGHT 2008 STMicroelectronics *****END OF FILE****/

@@ -6,6 +6,17 @@
   * @date    20140101
   * @brief   Main program body Jason
   ******************************************************************************
+  * @attention
+  *
+  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
+  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
+  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
+  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
+  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  *
+  * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
+  ******************************************************************************
   */ 
 
 /* Includes ------------------------------------------------------------------*/
@@ -15,40 +26,54 @@
 #include <stdio.h>
 #include  "lib.h"
 #include "platform_config.h"
-//#include "stdarg.h"
+#include "FAT.h"
+#include "sdcard.h"
 #include "gpio_key.h"
+#include "keyscan_adc.h"
 #include "lcd.h"
 #include "IIC.h"
 #include <T226.h>
 #include "tsliic.h"
-#include "OTP.h"
 #include <V_SET.h>
 #include <stdlib.h>
+#include <hfz_secret.h>
+#include <LVDS_I2C.h>
+#include <LVDS_OTP.h>
+#include "Mtransmit.h"
 
+GPIO_InitTypeDef GPIO_InitStructure;
 ErrorStatus HSEStartUpStatus;
 /* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+static vu32 TimingDelay = 0;
+extern BYTE FAT32_Enable; 
+extern WORD SectorsPerClust;
+extern u16 image_count ;
+extern u16 image_all ;
+SD_Error Status = SD_OK;
+SD_CardInfo SDCardInfo;
+u32  sd_Capacity;
+SD_Error SD_InitAndConfig(void);
 /* Private function prototypes -----------------------------------------------*/
 extern  __IO uint32_t TimingDelay;
 void DelayMs(__IO uint32_t nTime);
 void RCC_Configuration (void);
 void USART_GPIO_Configuration(void);
-void USART_REMAP_GPIO_Configuration(void);
 void NVIC_Configuration(void);
 void SYSinitialize (void);
 void  exit_hangler(void);
 void ShowData(char *p,u16 dat);
-void ShowData_ua2ma_4bitfloat(char *p,u16 dat);
-void ShowData_uV2V_4bitfloat(char *p,u16 dat) ;
-void ShowData_hex(char *p,u16 dat) ;   //十六進制顯示
-
+void ShowData_hex(char *p,u16 dat);
 void PassKey(void);
 void IDD_IOIDD_show(void);
-void  BACK_LIGHT_OFF(void);	
-void  BACK_LIGHT_ON(void);	
 //#define ERR_NO_SPACE	0xff
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-////-------------******* -----*********** --------------------------------------- 
+
+////-------------******* -----*********** ---------------
+////
 void Delay(u32 time);
 extern void DelayKEY (u32 k); //按住，画面暂停
 extern void KEYGPIO_Init(void);///*[把PB1/PB10配置成输入模式] 
@@ -60,13 +85,12 @@ extern u8 OTP_TIMES;
 extern u8 ID1_VALUE ;
 extern u8 ID2_VALUE ;
 extern u8 ID3_VALUE ;
-
 //------------------------------
 extern u8 ID_OK;
 extern u8 PIC_NUM;
 u8 Flag_sleep = 0;
-u8 pic_num=1;      //显示画面计数用
-//u8 KeyFlagPause=255;  //按键扫描计数用
+u8 pic_num=1;
+
 extern u32 RED_bmp;
 extern u32 GREEN_bmp;
 extern u32 BLUE_bmp;
@@ -82,272 +106,190 @@ extern u8 Flicker_OQC;
 extern u8 VCOM_register;
 extern u8 ID_register;   
 
-////===================预设分割线******一些有用需要经常改动的参数放到这里吧,比如电流预设上限之类的============== 
+////===============================================================================
+//u32 TESET=600; 
+
+
 u16 HFZIDD,HFZIDDIO;
 u16 HFZVDD,HFZVDDIO;
 u8 CAL_OK=0;
 u8 FLAG_RESET=0;
-u8 MTP_PASS=0;
-u8 show_promise=0;
+
 BYTE pucData[2];
+
 
 extern u16 IDDCurrentOfSleep;  ////存放睡眠电流用
 extern u16 IDDIOCurrentOfSleep;
 extern u8  FlagOfCurrentSleep;  ////睡眠电流采集标志，非0时意味着已经采集到睡眠电流
 u16 Vshunt_limit=0x9900;  //100mA所對應的分流電壓值  0~0x7fff ->iovdd     0xffff~0x8000 ->vdd
 
-u16 IDD_WORK_LIMIT_VALUE  =         20000;				/////产品工作IDD电流限定值 单位：10uA
-u16	IOIDD_WORK_LIMIT_VALUE  =		    20000;				/////产品工作IDDIO电流限定值
-u16	IDD_SLEEP_LIMIT_VALUE  =			  10200;				/////产品SLEEP  IDD电流限定值 单位：uA
-u16	IOIDD_SLEEP_LIMIT_VALUE  =		  10500;				/////产品SLEEP  IDDIO电流限定值
-#define	MIPI_YELLOW_BOARD 
-void LCD_Vol_SET(void)
-//+++++++++++++++++++++++++++++++++LCD电压设定++++++++++++++++++++++++++++++++++++++++ 	
-{
-	GPIO_InitTypeDef GPIO_InitStructure;	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA |RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD
-	                                         | RCC_APB2Periph_AFIO, ENABLE); 
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
-		
-	///*[把GPIOB 对应端口配置成输出模式] */  PB15 for VDDIO EN
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_15;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	///*[把PA 对应端口配置成输出模式] */     PA1 for VDD EN
-	GPIO_InitStructure.GPIO_Pin =GPIO_Pin_0| GPIO_Pin_1|GPIO_Pin_3|GPIO_Pin_4 ;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
-	GPIO_Init(GPIOA, &GPIO_InitStructure); 
+u16 IDD_WORK_LIMIT_VALUE  =         75000;				/////产品工作IDD电流限定值 单位：10uA
+u16	IOIDD_WORK_LIMIT_VALUE  =		    75000;				/////产品工作IDDIO电流限定值
+u16	IDD_SLEEP_LIMIT_VALUE  =			  800;				/////产品SLEEP  IDD电流限定值 单位：uA
+u16	IOIDD_SLEEP_LIMIT_VALUE  =		  800;				/////产品SLEEP  IDDIO电流限定值
+
+//u16 Vshunt_limit=0x9900;  //100mA所對應的分流電壓值  0~0x7fff ->iovdd     0xffff~0x8000 ->vdd
+
+//#define IDD_WORK_LIMIT_VALUE			75000				/////产品工作IDD电流限定值
+//#define	IOIDD_WORK_LIMIT_VALUE		75000				/////产品工作IDDIO电流限定值
+//#define	IDD_SLEEP_LIMIT_VALUE			1200				/////产品SLEEP  IDD电流限定值
+//#define	IOIDD_SLEEP_LIMIT_VALUE		1200				/////产品SLEEP  IDDIO电流限定值
+
+u8  HorA=1;  
+u8 show_promise=0;
+u16 VOTP_SET = 0;		   //////OTP电压设置，若不用，则设置为0，否则程式死于检测循环中。。。
+
+/**
+  * @brief  Main program
+  * @param  None
+  * @retval None
+  */
 	
-	VDD_ADJ_SET(335);			 //VDD_ADJ_SET 参数取值范围270~620，对应电压范围2.7V~6.2V; 
-	VDD_ADJ_EN(1);				 //使能VDD输出		
-	GPIO_SetBits(GPIOA, GPIO_Pin_1);  //真正的使能，此处是明神好心挖的坑，后续待修改
-
-	VDDIO_ADJ_SET(205);			  //VDDIO_ADJ_SET 参数取值范围150~360,对应电压范围1.5V~3.6V; 但是输出值因为二极管压降的问题，会比设定值低约0.3V, 
-	VDDIO_ADJ_EN(1);			  //使能VDDIO输出
-  
-	VOTP_ADJ_SET(390);			  //VOTP_ADJ_SET 参数取值范围150~2080，对应电压范围1.5V~14.1V; 
-	VOTP_EN(0);					  //使能VOTP输出	
-}	
-/*------------------------------------USER  START，万恶的分割线-------------------------------------------*/
-//================================================================================================================
-
+/*------------------------------------USER  START-------------------------------------------*/	
+	
 int main(void)  
-{ u16 cird [100]; 
-	u16 cc;
+{ 
 	u16 mm_KEY_UP = 1 ;
 	u16 mm_KEY_DOWN = 1 ;
 	u16 mm_KEY_PAUSE = 1;
-	u8 CurrentRetryflag=0;
-	u8 ID_RIGHT;
-//	u8 PicNumTemp=1;
-//	u32  m=0;
-//	u32 sdcap=0;  
-	SYSinitialize(); //STM32 系统时钟初始化	 
-	DelayMs(10);
-	//-----------------------------废话1分割线---------------------------
-
-	KEYGPIO_Init();							 //----	---对按鍵板進行初始化	
-	EEPROM_GPIO_Config();					 //----	---对芯片進行配置	
-	EEpromRead_CurrentCalibration();		 //----读取EEprom存储的系数及电流校准
 	
+	u32  m=0;
+	u32 sdcap=0;
+  
+	SYSinitialize(); //STM32 系统时钟初始化	
+ //---------------------------------------
+	Delay(10);
+	
+	KEYGPIO_Init();
+	EEPROM_GPIO_Config();	
+//////////----------------------------------------------------------------	
 	mm_KEY_UP=KEY_UP;   //前進
 	mm_KEY_DOWN=KEY_DOWN;   //後退
 	mm_KEY_PAUSE=KEY_PAUSE;    //進入待機模式
-	GPIO_ResetBits(GPIOC, GPIO_Pin_1); 	 //---beep  off--------$#@#&^&&^%^%$###	
-//-------------------------------废话2分割线---------------------------	
-	T226_intion();  //注意：电压输出受到STM32和226同时控制,故先配置INA226
-	LCD_Vol_SET();		///////LCD 電壓設定,,,,//注意：电压输出受到STM32和226同时控制
+//	GPIO_ResetBits(GPIOC, GPIO_Pin_1); 	 /////////beep  off
 	
-//----------VDD大電流檢測 	-----IOVDD大電流檢測-------------------------
-//--若此时电流超过20000/100=200ma则认为电源短路，切断电源，蜂鸣器一长2短鸣叫，同时背光闪烁	
-	while (Measure_I_5TimesForProtectIDD(20000)|	Measure_I_5TimesForProtectIDDIO(20000))	
-    {	
-			BEEP_ON();DelayMs(500);BEEP_BIBI();//	BEEP_ON();DelayMs(1000);BEEP_BIBI();
-			BACK_LIGHT_OFF();DelayMs(300);BACK_LIGHT_ON();DelayMs(300);	BACK_LIGHT_OFF();DelayMs(300);BACK_LIGHT_ON();
-      if( CurrentRetryflag==0)  //防止连续开机误大电流报警
-			{LCD_Vol_SET();CurrentRetryflag++;}
-      else 
-			{
-				 while  (1)
-				 {BACK_LIGHT_OFF();DelayMs(30);BACK_LIGHT_ON();DelayMs(30);}
-      }			
-    }			
-//--------------------------配合分割线----------------------------------------------		
-	  BACK_LIGHT_OFF(); //次函数包含了背光控制脚PC7的初始化
-		BACK_LIGHT_ON();  //先执行 BACK_LIGHT_OFF();或PC7先初始化后，本函数才正常
-//***************************废话说完了好像************************************
-				 
-		STM32_Init_SSD2828();					 //----	---对SSD2828&LCD 初始化	
-	  EXTI_Configuration();        
+	
+	if((mm_KEY_UP==0)&&(mm_KEY_DOWN==0)&&(mm_KEY_PAUSE==0))
+	{
+	   while((mm_KEY_UP==0)||(mm_KEY_DOWN==0)||(mm_KEY_PAUSE==0))
+		 {
+			mm_KEY_UP=KEY_UP;   //前進
+			mm_KEY_DOWN=KEY_DOWN;   //後退
+			mm_KEY_PAUSE=KEY_PAUSE;    //進入待機模式		 
+		 }			 
+     
+//		 STM_MINI_SET();
+		 AUTO_CALIBRATION();
 		
+		 mm_KEY_UP = 1 ;
+		 mm_KEY_DOWN = 1 ;
+		 mm_KEY_PAUSE = 1;
+	}
+//---------------------------------ok---20150731  Alan--------------------	
+
+   CAL_OK=EEPROMBYTE_Read(0x18);  //如果校准过，则使用校准参数，如果未校准，则使用默认参数
+//   CAL_OK=EEPROMBYTE_Read(0x19);
+   if(CAL_OK==0xcc)
+   { GET_PRESENT(); } //获取校准参数
+	 else
+	 {
+				
+//				BEEP_ON();
+//				while(1);
+
+	 }
+//--------------------------配合分割线----------------------------------------------		
+	BACK_LIGHT_OFF(); //次函数包含了背光控制脚PC7的初始化
+	BACK_LIGHT_ON();  //先执行 BACK_LIGHT_OFF();或PC7先初始化后，本函数才正常
+	BACK_LIGHT_ON();
+//***************************废话说完了好像************************************		
+ 
+	STM32_Init_SSD2828();					 //----	---对SSD2828&LCD 初始化	
+	KEYGPIO_Init();
+	DelayMs(50);
+
+
+   
+    
 while (1)
 	{
-		Allcolor(0,WHITE_bmp);		     DelayMs(100);//刷白
+//////-------------------
 
-		////////以下代碼內部測試用。。。
-//	mm_KEY_UP = KEY_UP;
-//	if(mm_KEY_UP == 0)
-//	{
-//		SSD2828_ENTER_LP_mode();
-//		ID_set();  				   ///////由於產品均已經燒錄ID了，無ID燒錄機會進行驗證。。。暫時擱置ID燒錄程式驗證！！！！！！！！
-////////		MTP();
-//		MTP_ID();
-////////		reset_lcd();
-//	}
-//		Forward_scan();				         DelayMs(50);//正掃，該函數可根據實際需要去除
+		Allcolor(0,WHITE_bmp);		     DelayMs(150);//刷白
+//		while(1);
 
-//--------------------------------------------------------------------------------		
-////判斷ID是否未燒	 	
-//    	CHECK_ID_again();
-//		mm_KEY_DOWN = KEY_AUTO_MODE;
-		ID_RIGHT=ID_CHECK();
-//		if((mm_KEY_DOWN!=0)&&(ID_RIGHT==1))
-//		{	
-//		  OTP_ID_NG();
-//			while(1)
-//			{
-//      	BEEP_Dudu();
-//			}			
+	  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//		while(Measure_IDD(mA) > IDD_WORK_LIMIT_VALUE)
+//		{
+//			Allcolor(1,WHITE_bmp);		     DelayMs(150);//刷白
+//			IDD_IOIDD_show();
+//			BEEP_Dudu();
 //		}
-//		
-//--------------------------------------------------------------------------------	
+
+
+//---------------------------------------------------------------------------		
 		
 ////請在此處定義您所需顯示的產品訊息！務必在尾部加上適當延時    ps*-->( min 50 ms )			
-//2015.4.11该型号WDT要求只烧VCOM
-
-		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
-		ShowTxt("60,20,0,080WQ18_V1_JD9366");	  				       DelayMs(150);	
-    //ShowTxt("60,20,80,TK_test");	  				 DelayMs(150);		
-		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
 		
-		ShowData_hex("30,450,1000", OTP_VALUE1);			   DelayMs(80);
-		ShowData_hex("30,450,1030", OTP_VALUE2);			   DelayMs(80);
-		ShowData_hex("30,450,1060", OTP_TIMES);			     DelayMs(80);
-	
-		switch(OTP_TIMES)
-		{
-			case 0x00: ShowTxt("60,20,1000,烧入0次");	   					DelayMs(150);   break;
-		  case 0x01: ShowTxt("60,20,1000,烧入1次");	   					DelayMs(150);   break; 
-		  case 0x03: ShowTxt("60,20,1000,烧入2次");	   					DelayMs(150);   break; 
-			case 0x07: ShowTxt("60,20,1000,烧入3次");	            DelayMs(150);   break;		
-		}
-		DelayKEY(250);
-		
-/************************2014.10.30**************************************/
-//		mm_KEY_DOWN = KEY_AUTO_MODE;
-//		if(mm_KEY_DOWN==0)
-//		{	
-//    enter_sleep_mode();
-//		DelayMs(1500);
-//		DelayKEY(2);//供分析异常时使用
-//		
-//		SLEEP_CAL_TEST(); 
-//		
-//    exit_sleep_mode();
-//    DelayMs(5);
-//		}
-/**************************************************************/
+//		ShowTxt("48,20,299, ");	  				             DelayMs(150);
+//		ShowTxt("48,20,299,107DEMO_V1");	  				   DelayMs(150);
+//		ShowTxt("48,20,299, ");	  				             DelayMs(150);
+//		DelayMs(550);
 
-//////////===================================手自動選擇==========================================	
-////   Backward_scan();	 	    DelayMs(50);   //反掃，該函數可根據實際需要去除
-///* 
-///*手動模式*/ 
-   mm_KEY_UP = KEY_UP;
-	 if(mm_KEY_UP == 0)
-	 {
-		  showbmp (Flicker_OTP);				DelayMs(250);
-		  ShowTxt("40,0,0,手动模式");	
-		  while(mm_KEY_UP == 0)
-			{
-			 mm_KEY_UP = KEY_UP; 
-			}
-            MTP_PASS=1;
-            KEY_adjust();
-	 }
+////////===================================手自動選擇==========================================	
+	 
+/*手動模式*/ 
+//   mm_KEY_UP = KEY_UP;
+//	 if(mm_KEY_UP == 0)
+//	 {
+//		  showbmp (Flicker_OTP);				DelayMs(250);
+//		  ShowTxt("40,0,0,手动模式");	
+//		  while(mm_KEY_UP == 0)
+//			{
+//			 mm_KEY_UP = KEY_UP; 
+//			}
+//        LVDS_KEY_adjust(); //手动调整
+//	
+//	 }
 /*_____________________________________________________________________________________*/	
 	 
 /*自動模式*/	 
 	 mm_KEY_DOWN = KEY_AUTO_MODE;
 	 if(mm_KEY_DOWN == 0)
 	 {	
-			showbmp (Flicker_OTP);				DelayMs(350);
-			Auto_otp();	
-		  
-		  switch(OTP_TIMES)
-		  {
-			case 0x00: ShowTxt("60,20,1000,烧入0次");	   					DelayMs(150);   break;
-		  case 0x01: ShowTxt("60,20,1000,烧入1次");	   					DelayMs(150);   break; 
-		  case 0x03: ShowTxt("60,20,1000,烧入2次");	   					DelayMs(150);   break; 
-			case 0x07: ShowTxt("60,20,1000,烧入3次");	            DelayMs(150);   break;
-		  }	 	
-			while(1);
-//			{
-//   		   BACK_LIGHT_OFF();DelayMs(1000);BACK_LIGHT_ON();DelayMs(1000);
-//			} 	 
+//			showbmp (Flicker_OTP);				DelayMs(350);	   
+//			Auto_otp();	 //自动调整
+//            GAMMA_OTP_CHECK();
+//        LVDS_WRITE_SPI(0x00,0x00);  ////page 0
+//        LVDS_WRITE_SPI(0x1F,0x80); 
 	 }
 //////================================SELECT OFF=========================================== 	
-	 
-	 
-//////判斷VCOM是否未燒	 
-//////----------------------------------------------------------------------	 
-	 else
-
-	 {
-//		VCOM_TIMES_Check(0xE8);
-	 	if(OTP_TIMES == 0x00)     //如果一次未燒，提示OTP未燒   
-		{	                         //若IC無回讀次數功能，可將虛線內內容屏蔽
-			OTP_NO();	
-		}		 
-	 }	
-//*/
-//----------------------------------------------------------------------
-	DelayMs(200);   
-//	  Backward_scan();	 	    DelayMs(250);   //反掃，該函數可根據實際需要去除
-//    MTP_Recogn();
+//	while(1){
+//     showbmp (Flicker_OTP);				DelayMs(350);
+//    SHOW_READ_VALUE(); 
+//    }
+//    GAMMA_OTP_CHECK();
 /*循環電測畫面*/
 //在lcd.c文件中定義正確的電測畫面總數	 ，特殊畫面--》flick_otp\flicker_QC請正確定義其編號
 	LCDTEST:
 	 
-	switch(pic_num)
+	 switch(pic_num)
 	 {
-		case 1:       //第二次FLICKER调整完毕并不烧录
-		{
-				showbmp (1);	                  DelayMs(120); 
-//				MTP_PASS=0;
-//				KEY_adjust();			
-//			pic_num=2;	
-            break;
-		}
-		case 2:	 showbmp (2);               DelayMs(500);   break;	/////white
-		case 3:	 showbmp (3);             NORML_CAL_TEST();  DelayMs(500);   break; 	//black
-		case 4:	 showbmp (4);               DelayMs(120);   break; 	//baizong
-		case 5:  showbmp (5);            /*   NORML_CAL_TEST(); */       DelayMs(120);   break;
-		case 6:  showbmp (6);               DelayMs(120);   break;
-		case 7:  showbmp (7);               DelayMs(120);   break;  
-		case 8:  showbmp (8);               DelayMs(120);   break;	
-		case 9:  showbmp (9);               DelayMs(500);   break;	
-		case 10: showbmp (10);              DelayMs(300);   break;	
-		case 11: showbmp (11);              DelayMs(300);   break;	
-		case 12: showbmp (12);              DelayMs(120);   break;	
-		case 13: showbmp (13);              DelayMs(120);   break;	
-		case 14: showbmp (14);              DelayMs(120);   break;	
-		case 15: showbmp (15);              DelayMs(120);   break;	
-		case 16: showbmp (16);              DelayMs(300);   break;	
-		case 17: showbmp (17);              DelayMs(120);   break;	
-		case 18: showbmp (18);              DelayMs(300);   break;	
-		case 19:        //第二次FLICKER调整完毕并烧录
-		{
-//				showbmp (19);              DelayMs(120);   
-//				MTP_PASS=1;
-//				KEY_adjust();				
-			pic_num++;	
-            break;	
-		}
-		default:
-			showbmp (pic_num);              DelayMs(300);   break;
-	 } 
+	 	case 1:  showbmp (1);	   	 DelayMs(250);   break;	
+		case 2:	 showbmp (2);	     DelayMs(250);   break;	///// 
+		case 3:	 showbmp (3);	     DelayMs(250);   break; 	//
+		case 4:	 showbmp (4);	     DelayMs(250);   break; 	
+		case 5:  showbmp (5);	     DelayMs(250);   break;
+		case 6:  showbmp (6);	     DelayMs(250);   break;
+		case 7:  showbmp (7);	     DelayMs(250);   break;
+		case 8:  showbmp (8);	   	 DelayMs(250);   break;
+		case 9:  showbmp (9);	   	 DelayMs(250);   break;
+    case 10:  showbmp (10);	   	 DelayMs(250);   break;
+         
+		 default:
+             showbmp (pic_num);	   	 DelayMs(250);   break;
+
+	 }
 	 PassKey();
 			 
 	 goto LCDTEST;
@@ -359,42 +301,34 @@ while (1)
  /*------------------------------------USER  END-------------------------------------------*/
 void IDD_IOIDD_show(void)
 {
+
 	{	
 //    Allcolor(1,WHITE_bmp);		     DelayMs(50);//刷白	
     
 		HFZVDD=M9_BUS_VOLTAGE();	  /////mV
-		ShowTxt("38,20,99,VDD:(V)");	  				             DelayMs(150);
-		ShowData_uV2V_4bitfloat("38,200,99",HFZVDD);         DelayMs(150);		    
+		ShowTxt("38,20,99,VDD:");	  				             DelayMs(150);
+		ShowData("38,200,99",HFZVDD);    DelayMs(150);
 			
 	  HFZIDD=Measure_IDD(mA);		
-		ShowTxt("38,20,149,IDD:(mA)");	  				             DelayMs(150);
-		ShowData_ua2ma_4bitfloat("38,200,149",HFZIDD);         DelayMs(150);
+		ShowTxt("38,20,149,IDD:");	  				             DelayMs(150);
+		ShowData("38,200,149",HFZIDD);    DelayMs(150);
 		
 	  HFZVDDIO=M12_BUS_VOLTAGE();	  /////mV
-		ShowTxt("38,20,199,VDDIO:(V)");	  				           DelayMs(150);
-		ShowData_uV2V_4bitfloat("38,250,199",HFZVDDIO);     DelayMs(150);
+		ShowTxt("38,20,199,VDDIO:");	  				           DelayMs(150);
+		ShowData("38,200,199",HFZVDDIO);  DelayMs(150);
 		
-    HFZIDDIO=Measure_IDDIO(mA);  
-		ShowTxt("38,20,249,IDDIO:(mA)");	  				           DelayMs(150);
-		ShowData_ua2ma_4bitfloat("38,250,249",HFZIDDIO);   DelayMs(150);
-		
-		if (FlagOfCurrentSleep)
-				{ 
-					ShowTxt("38,20,299,IDD待机电流:(uA)"  );	               DelayMs(150);
-					ShowData("38,260,349",IDDCurrentOfSleep);        DelayMs(150);
-					ShowTxt("38,20,399,IDDIO待机电流:(uA)  ");	   					 DelayMs(250);
-					//这一句比较奇怪，如果ShowTxt("38,20,399,IOVDD待机电流");,则无法显示，莫名其妙啊
-					ShowData("38,260,449",IDDIOCurrentOfSleep);      DelayMs(150);	        
-				}
-    show_promise=0;				
+    HFZIDDIO=Measure_IDDIO(mA);
+		ShowTxt("38,20,249,IDDIO:");	  				           DelayMs(150);
+    ShowData("38,200,249",HFZIDDIO);	DelayMs(150);
+    		
 	}
 }
 
-
 void PassKey(void)
 {
+	u32 coun=0;
 	u16 mm1,mm2,mm3;
-
+  
 	mm1=mm2=mm3=1;    //進入待機模式
 
 			
@@ -402,109 +336,236 @@ void PassKey(void)
 	 mm2=KEY_DOWN;   //後退
 	 mm3=KEY_PAUSE;    //進入待機模式
 	 DelayMs(1);
-	
-	 while((mm1!=0)&&(mm2!=0)&&(mm3!=0))
+/*******手动跑画面********/	 
+	coco:	
+   if(HorA==0)	
+   {	
+		 while((mm1!=0)&&(mm2!=0)&&(mm3!=0))
+		 {
+			mm1=KEY_DOWN;	
+			mm2=KEY_UP;
+			mm3=KEY_PAUSE;	
+			DelayMs(50);  
+				if(show_promise==1)
+				{
+					IDD_IOIDD_show();		
+				}
+        if((mm1==0)&&(mm2==0)&&(mm3!=0))      //如果+/-键按同时按下 ，进入手动跑画面模式
+				{
+					HorA=~HorA;
+					BEEP_BIBI();
+					while(mm1==0||mm2==0)   //等待按键释放
+					{
+					mm1=KEY_DOWN;
+					mm2=KEY_UP;
+					}
+				  goto coco;
+				}				
+		 }
+		 if(mm1==0)
+		 {			 
+			pic_num++;	 
+			if(pic_num>PIC_NUM)
+			{
+				pic_num=1;
+			}
+		}
+		else if(mm2==0)
+		{	
+			pic_num--;	   
+			if(pic_num==0)
+			{
+				pic_num=PIC_NUM;
+//				Backward_scan();	 	    DelayMs(50);
+			}
+		}
+		else if(mm3==0)
+		{
+        ;
+		}	
+
+		while(mm1==0||mm2==0||mm3==0)   //等待按键释放
+		{
+			mm1=KEY_DOWN;
+			mm2=KEY_UP;
+			mm3=KEY_PAUSE;
+		}	
+   }
+/********自动跑画面********/	 
+	 else
 	 {
-		mm1=KEY_DOWN;	
-		mm2=KEY_UP;
-		mm3=KEY_PAUSE;	
+		 do
+		 {
+	    mm1=KEY_UP;   //前進
+      mm2=KEY_DOWN;   //後退
+	    mm3=KEY_PAUSE;    //進入待機模式			 
+			if(mm3==0)      //如果pause键按下，画面暂停，再按一次则继续跑动
+			{	   
+					while((mm3==0)&&(mm2!=0)&&(mm1!=0))   //等待按键释放
+					{mm3=KEY_PAUSE;}
+	//				DelayMs(500);	
+					mm3=1;					
+					while(mm3!=0)   //等待按键被再次按下，允许画面继续跑动
+					{mm3=KEY_PAUSE;}
+				
+					while(mm3==0)   //等待按键释放
+					{mm3=KEY_PAUSE;}				
+			}
+			if((mm1==0)&&(mm2==0)&&(mm3!=0))      //如果+/-键按同时按下 ，进入自动跑画面模式
+	    {
+					HorA=~HorA;
+					BEEP_BIBI();
+					while(mm1==0||mm2==0)   //等待按键释放
+					{
+					mm1=KEY_DOWN;
+					mm2=KEY_UP;
+		      }
+					goto coco;
+	    }
+			coun++; 
+			DelayMs(1);
 			if(show_promise==1)
 			{
-				IDD_IOIDD_show();		
-			}			
+				 IDD_IOIDD_show();		
+			}	
+		 }while(coun<1600);
+		 
+//-----------------------------------		 
+//	   if(pic_num==17)
+//		 {
+//			DelayMs(200);
+//		 }
+//     else if(pic_num==1)
+//		 {
+//      DelayMs(200);	
+//		 }
+//		 else
+//		 {
+//			DelayMs(200);
+//		 }
+		  
+//-----------------------------------			
+			
+		 pic_num++;
+		 if(pic_num>PIC_NUM)
+		 {
+			 pic_num=1;
+//			 Sleep_Test(1500); 
+		 }	 
 	 }
-	 if(mm1==0)
-	 {			 
-		pic_num++;	 
-		if(pic_num>PIC_NUM)
-		{
-			pic_num=1;
-		}
-	}
-	else if(mm2==0)
-	{	
-		pic_num--;	   
-		if(pic_num==0)
-		{
-			pic_num=PIC_NUM;
-		}
-	}
-	else if(mm3==0)
-	{
-//		enter_sleep_mode();
-//		DelayMs(1500);
-//		
-//    SLEEP_CAL_TEST();    //测量待机电流
-//		
-//		mm3=1;				
-//		while(mm3!=0)
-//		{
-//			mm3=KEY_PAUSE;
-//		}		
-//		exit_sleep_mode();
-//		DelayMs(50); 
-		;  //不进待机
-	}			 
-	while(mm1==0||mm2==0||mm3==0)   //等待按键释放
-	{
-		mm1=KEY_DOWN;
-		mm2=KEY_UP;
-		mm3=KEY_PAUSE;
-	}	
-	
-	DelayMs(50);		 
-} 
-
-void BACK_LIGHT_ON(void)
-{
-	GPIO_SetBits(GPIOC, GPIO_Pin_7);  // 
+	 
+	 DelayMs(50);	
+ 	
 }
+/*******************************************************************************
+* Function Name  : void ShowData_hex(char *p,u16 dat)   
+* Description    : 十六進制顯示
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/  
 
-void BACK_LIGHT_OFF(void)
-{
-	GPIO_InitTypeDef GPIO_InitStructure;	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA |RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD
-	                                         | RCC_APB2Periph_AFIO, ENABLE); 
-	//#define GPIO_Remap_SWJ_JTAGDisable ((u32)0x00300200)  /* JTAG-DP Disabled and SW-DP Enabled */ 禁止JTAG,以空出PB3,PB4
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
-	
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_7 ;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
+void ShowData_hex(char *p,u16 dat)    //十六進制顯示
+	 { 
+	  char str1[]="123,456,789";
+		char str2[20]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+		u8 j=0,tm1,tm2;
+		u16 tep=dat;	
+		strcpy(str1,p); 
+			
+		 do { str2[j]=str1[j];}
+		 while (str1[++j] !=0) ;
 
+       str2[j++] =44;   //,
+		   str2[j++] =79;   
+		   str2[j++] =120;
+		   if((dat/16)<0x0a)				 
+			 {str2[j++]=dat/16+0x30;}
+			 else
+			 {str2[j++]=dat/16+0x37;}
+		   if((dat%16)<0x0a)	       			 
+       {str2[j++]=dat%16+0x30;}
+	     else
+       {str2[j++]=dat%16+0x37;}
+       str2[j]='\0';
+		   
+		 ShowTxt(str2);
+	 } 
+    
+  
+/*******************************************************************************
+* Function Name  : void ShowData(char *p,u16 dat)      
+* Description    : 十進制顯示
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/   
+  
+void ShowData(char *p,u16 dat)     //十進制顯示
+	 { u8 i,j,k,m;
+		 u16 tep;
+	  char str1[]="123,456,789";
+		char str2[20]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+		char strt [8]; 
+		strcpy(str1,p); 
+		//strcpy(str2,"")
+
+		tep= dat;
+    if (tep==0)	i=1;
+			else i=0;
+		 while(tep)
+		 { tep /=10;
+			 i++;		 
+		 }
+		 j=0;
+		 do { str2[j]=str1[j];j++;}
+		 while (str1[j] !=0) ;
+		 // {}
+		 m=i+j; 
+		 tep=dat;
+		 for (k=0;k<i;k++)
+		 {
+			 str2[m]=tep%10+48;
+			 m--;
+			 tep /=10;
+		 }
+		 str2[m] =44;
+		// j++;
+		 ShowTxt(str2);
+	 }
+	//----------------------------- 
 	
-	GPIO_ResetBits(GPIOC, GPIO_Pin_7);  // 
-}	 
 //-------------------------------------------------------------------------------------------------
-
 void Delay(u32 time)
 {
-//	u32 x,y;
-//	for (y=0;y<time;y++)
-//	{
-//	for (x=0;x<4096;x++)
-//		{  ;
-//		}
-//	}
+//	DelayMs(time);	
 	Dly_10ns(4000*time);
 }
-
  
 //---------------------------------------以下内容请勿修改------------------------------------------
 //=================================================================================================
 void DelayMs(__IO uint32_t nTime)
 { //__IO==volatile //uint32_t ==无符号整型数
-  TimingDelay = nTime;
-  while(TimingDelay != 0); 
+	u32 temp;
+  SysTick->CTRL&=0xfffffffb;//bit2??,??????  HCLK/8	
+	SysTick->LOAD=(u32)nTime*(72/8)*1000;//????(SysTick->LOAD?24bit)
+	SysTick->VAL =0x00;           //?????
+	SysTick->CTRL=0x01 ;          //????  
+	do
+	{
+		temp=SysTick->CTRL;
+	}
+	while(temp&0x01&&!(temp&(1<<16)));//??????   
+	SysTick->CTRL=0x00;       //?????
+	SysTick->VAL =0X00;       //?????	  
 }
 void SYSinitialize (void)
 {  
-	 RCC_Configuration();
-	 NVIC_Configuration();
-   USART_REMAP_GPIO_Configuration(); 
-   SysTick_Config(72000);   //因为未使用外部时钟，所以此次参数  待定 ; ==/SysTick_Config(SystemCoreClock/1000); == SysTick_Config(72000);
-   }
+    RCC_Configuration();
+    USART_GPIO_Configuration();
+    SysTick_Config(72000);   //因为未使用外部时钟，所以此次参数  待定 ; ==/SysTick_Config(SystemCoreClock/1000); == SysTick_Config(72000);
+    NVIC_Configuration( );
+}
 
 /**
   * @brief  Configures the nested vectored interrupt controller.
@@ -606,7 +667,37 @@ void RCC_Configuration(void)
 	  RCC_APB1PeriphClockCmd( RCC_APB1Periph_TIM2, ENABLE);  //=============2014.1.6
 }
 
+/* Private functions ---------------------------------------------------------*/
+SD_Error SD_InitAndConfig(void)
+{
+  Status = SD_Init();
 
+  if (Status == SD_OK)
+  {
+    /*----------------- Read CSD/CID MSD registers ------------------*/
+    Status = SD_GetCardInfo(&SDCardInfo);
+  }
+  else return 0;
+  if (Status == SD_OK)
+  {
+    /*----------------- Select Card --------------------------------*/
+    Status = SD_SelectDeselect((u32) (SDCardInfo.RCA << 16));
+  }
+  else return 0;
+  if (Status == SD_OK)
+  {
+    /*----------------- Set BusWidth ------------------------------*/
+    Status = SD_EnableWideBusOperation(SDIO_BusWide_4b);
+  }
+  else return 0;
+  /* Set Device Transfer Mode to INTERRUPT to DMA */
+  if (Status == SD_OK)
+  {  
+    Status = SD_SetDeviceMode(SD_DMA_MODE);//SD_DMA_MODE,SD_INTERRUPT_MODE
+  }
+	else return 0;
+  return Status;
+}
 //#ifdef __GNUC__
 //  /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
 //     set to 'Yes') calls __io_putchar() */
@@ -664,18 +755,31 @@ void assert_failed(uint8_t* file, uint32_t line)
   */ 
 void EXTI0_IRQHandler(void)
 {
-//	u16 i,j;
+	u16 i,j;
 	
-  while( EXTI_GetITStatus(EXTI_Line0)==RESET);	
-  EXTI_ClearITPendingBit(EXTI_Line0);
-//	GPIOC->BRR=0x0080;
-//	GPIOA->BRR=0x0010;
-//  GPIOA->BRR=0x0002;
-//  GPIOB->BRR=0x8000;
-
-  show_promise=1;
-	EXTI_ClearFlag(EXTI_Line0);
+	FLAG_RESET++;
+	if(FLAG_RESET == 1)
+	{
+		while( EXTI_GetITStatus(EXTI_Line0)==RESET);
+//		EXTI_ClearITPendingBit(EXTI_Line0);
+		GPIOC->BRR=0x0080;
+		GPIOA->BRR=0x0010;
+		GPIOA->BRR=0x0002;
+		GPIOB->BRR=0x8000;
+		
+		EXTI_ClearITPendingBit(EXTI_Line0);
+//		EXTI_ClearFlag(EXTI_Line0);
+	}
+	else if(FLAG_RESET>1)
+	{
+//		FLAG_RESET = 0;
+		__set_FAULTMASK(1);      // 关闭所有中端
+		NVIC_SystemReset();		 // 复位
+		
+	}
+	else
+	{;}
+//	EXTI_ClearITPendingBit(EXTI_Line0);
+//	EXTI_ClearFlag(EXTI_Line0);
 }
-
-
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

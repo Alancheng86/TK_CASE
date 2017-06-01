@@ -28,44 +28,6 @@
 
 
 
-#define KEY_PAUSE       GPIOB->IDR&GPIO_Pin_12
-#define KEY_UP      GPIOB->IDR&GPIO_Pin_13
-#define KEY_DOWN      GPIOB->IDR&GPIO_Pin_14
-#define KEY_AUTO_MODE      GPIOB->IDR&GPIO_Pin_1
-#define KEY_MAN_MODE      GPIOB->IDR&GPIO_Pin_0
-
-
-void I2C_DATAL_COMPARE(void);
-void I2C_MEMSURE1(int kk, int vcomdcdata );
-void I2C_DATAL_COMPAREX(void);
-void I2C_DATAL_COMPARE(void);
-void Auto_otp(void);
-void OTP_NO(void);
-void OTP_OK(void);
-void OTP_ERROR_1(void);
-void OTP_ERROR_2(void);
-void OTP_ERROR_3(void);
-void OTP_ERROR_4(void);
-void OTP_ID_OK(void);
-void OTP_ID_NG(void);
-void OTP_adjust_result(u16 senser_val);
-
-
-void VCOM_CHECK(u8 vcom); 
-u8 ID_CHECK(void);
-u8 VCOM_TIMES_Check(u8 reg);
-u8 Only_check_id(void);
-void CHECK_ID_again(void);
-void Flicker_for_Stable(u8 hfz_vocm);
-void KEY_adjust(void);
-
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-
-/////////////////////add in OTP.h----------------------------
-int Sensor_check(void);
-
-
 
 
 #endif /* __OTP_H */
