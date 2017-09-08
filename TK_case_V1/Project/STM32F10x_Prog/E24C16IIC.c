@@ -230,7 +230,78 @@ unsigned char EEPROMBYTE_Read(unsigned int addr)
 }
 
 
+//=================================================================
 
+unsigned char EEPROMBYTE_Write_Flex(unsigned int slave,unsigned int addr,unsigned char regdata)
+{
+	  unsigned char sign,TEP;
+
+		sign=0;	
+//		TEP=addr>>8;
+//		TEP &=0X01;   //针对24LC08
+//    TEP <<=1;
+
+	  TEP =slave;   //CONTROL BYTE:1010 A2 * * W =10100000 ; 其中A2=0
+	
+		IICStart();
+		IICSentByte(TEP);     //CONTROL BYTE:1010 A2 a9 a8 W =10100 a9 a8 0
+		if(IICTestTAck(0))
+		sign+=0x01;
+				
+		TEP=addr; 
+		IICSentByte(TEP);
+		if(IICTestTAck(0))
+    { sign+=0x04;}
+        
+		IICSentByte(regdata);
+ 		if(IICTestTAck(0))
+		{//IICTWaitS();IICTWaitS();IICTWaitS();DelayS(20);
+			sign+=0x08; 
+//    while(1);   //判断数据是否正确写入,测试用
+		}	
+		
+		IICStop();
+    return sign;
+}
+unsigned char EEPROMBYTE_Read_Flex(unsigned int slave,unsigned int addr)
+{
+	unsigned char sign=0,TEP;
+	
+//	TEP=addr>>8;
+//	TEP &=0X03;   //针对24LC08
+//  TEP <<=1;
+
+	TEP =slave;   //CONTROL BYTE:1010 A2 * * W =10100000 ; 其中A2=0
+	
+	IICStart();
+	IICSentByte(TEP);      ////CONTROL BYTE:1010 A2 A1 A0 W =10100000
+	if(IICTestTAck(0))
+	   sign+=0x01;
+	
+	//TEP=addr>>8;
+	//IICSentByte(TEP);
+	//if(IICTestTAck(0))
+	//sign+=0x02;
+	TEP=addr; 	
+	IICSentByte(TEP);
+	if(IICTestTAck(0))
+	sign+=0x04;
+	
+	IICStart();
+
+	TEP = slave+1;   //CONTROL BYTE:1010 A2 * * W =10100000 ; 其中A2=0
+
+//	IICSentByteS(0xA1);      ////CONTROL BYTE:1010 A2 A1 A0 R =10100001  MS此处不需要设定地址，资料没有明确说明
+	IICSentByte(TEP);      ////CONTROL BYTE:1010 A2 A1 A0 R =10100001  MS此处不需要设定地址，资料没有明确说明
+	if(IICTestTAck(1))
+	sign+=0x08;
+	
+	sign=IICReceiveByte();
+	//PIN_SDA1_IICOUTPUTS();
+	IICSendTAck(1);
+	IICStop();
+    return(sign);
+}
 
 #ifdef	EEPROM_K24C02
 

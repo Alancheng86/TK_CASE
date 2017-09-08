@@ -529,17 +529,16 @@ void LCD_CtrlLinesConfig(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA |RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD
 	                                         | RCC_APB2Periph_AFIO, ENABLE); 
 	//#define GPIO_Remap_SWJ_JTAGDisable ((u32)0x00300200)  /* JTAG-DP Disabled and SW-DP Enabled */ 禁止JTAG,以空出PB3,PB4
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
-	
+//	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
 	
 	/*[把GPIOB 对应端口配置成输出模式] */
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_2 | GPIO_Pin_4  | GPIO_Pin_5 | GPIO_Pin_8 | GPIO_Pin_9  ;
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_2 | GPIO_Pin_4  | GPIO_Pin_5 | GPIO_Pin_8  ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//GPIO最高速度50MHz
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	
 	/*[把PA 对应端口配置成输出模式] */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 |GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_8| GPIO_Pin_9| GPIO_Pin_10| GPIO_Pin_11| GPIO_Pin_12| GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 |GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_8| GPIO_Pin_9| GPIO_Pin_10| GPIO_Pin_11|GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//GPIO最高速度50MHz
 	GPIO_Init(GPIOA, &GPIO_InitStructure);  
@@ -576,8 +575,15 @@ void LCD_CtrlLinesConfig(void)
 
 void EXTI_Configuration()
 {	
-	EXTI_InitTypeDef EXTI_InitStructure;
-//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO,ENABLE);
+	GPIO_InitTypeDef GPIO_InitStructure;
+	EXTI_InitTypeDef EXTI_InitStructure;	
+	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB| RCC_APB2Periph_AFIO, ENABLE); 
+	                                         
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_0 ;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);	
+	
   GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource0);
 	
 	EXTI_InitStructure.EXTI_Line=EXTI_Line0;
@@ -634,7 +640,7 @@ void DelayKEY (u32 k)
 	volatile u32 j;
 
       for (j=0; j<k; j++)
-         {  
+      {  
 		 	m=KEY_PAUSE;	
 			Delay(2);
             while(m==0)
@@ -642,7 +648,7 @@ void DelayKEY (u32 k)
 			  	m=KEY_PAUSE; 
 			  	Delay(20);
 			  }            
-         }	
+      }	
 }
 
 

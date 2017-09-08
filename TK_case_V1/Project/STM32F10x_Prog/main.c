@@ -19,11 +19,16 @@
 #include "gpio_key.h"
 #include "lcd.h"
 #include "IIC.h"
+#include "IICS.h"
+#include "STORE.h"
 #include <T226.h>
 #include "tsliic.h"
 #include "OTP.h"
 #include <V_SET.h>
 #include <stdlib.h>
+#include "M2481_Control.h"
+#include <TSLIIC_Brightness.h>
+#include <TSLIIC_REV01.h>
 
 ErrorStatus HSEStartUpStatus;
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +55,7 @@ void  BACK_LIGHT_ON(void);
 /* Exported constants --------------------------------------------------------*/
 ////-------------******* -----*********** --------------------------------------- 
 void Delay(u32 time);
+void DelaySec(u32 time);
 extern void DelayKEY (u32 k); //按住，画面暂停
 extern void KEYGPIO_Init(void);///*[把PB1/PB10配置成输入模式] 
 extern u8 MIPI_READ_DATA[10];
@@ -61,6 +67,10 @@ extern u8 ID1_VALUE ;
 extern u8 ID2_VALUE ;
 extern u8 ID3_VALUE ;
 
+extern u8 Gamma_VALUE1;	
+extern u8 Gamma_VALUE2;
+extern u8 Gamma_VALUE3;
+extern u8 Gamma_VALUE4;	
 //------------------------------
 extern u8 ID_OK;
 extern u8 PIC_NUM;
@@ -81,65 +91,64 @@ extern u8 Flicker_OQC;
 //------------------------------
 extern u8 VCOM_register;
 extern u8 ID_register;   
-
+extern u8 ID1_READ,ID2_READ,ID3_READ;
+extern u32 ID_SHOW;
 ////===================预设分割线******一些有用需要经常改动的参数放到这里吧,比如电流预设上限之类的============== 
 u16 HFZIDD,HFZIDDIO;
 u16 HFZVDD,HFZVDDIO;
 u8 CAL_OK=0;
 u8 FLAG_RESET=0;
-u8 MTP_PASS=0;
 u8 show_promise=0;
 BYTE pucData[2];
 
 extern u16 IDDCurrentOfSleep;  ////存放睡眠电流用
 extern u16 IDDIOCurrentOfSleep;
 extern u8  FlagOfCurrentSleep;  ////睡眠电流采集标志，非0时意味着已经采集到睡眠电流
+
 u16 Vshunt_limit=0x9900;  //100mA所對應的分流電壓值  0~0x7fff ->iovdd     0xffff~0x8000 ->vdd
 
-u16 IDD_WORK_LIMIT_VALUE  =         20000;				/////产品工作IDD电流限定值 单位：10uA
-u16	IOIDD_WORK_LIMIT_VALUE  =		    20000;				/////产品工作IDDIO电流限定值
-u16	IDD_SLEEP_LIMIT_VALUE  =			  10200;				/////产品SLEEP  IDD电流限定值 单位：uA
-u16	IOIDD_SLEEP_LIMIT_VALUE  =		  10500;				/////产品SLEEP  IDDIO电流限定值
-#define	MIPI_YELLOW_BOARD 
+//=========================================================================================
+//白画面
+u16 IDD_WORK_LIMIT_VALUE_WHITE  =         3730;				/////产品工作IDD电流限定值 单位：10uA
+u16	IOIDD_WORK_LIMIT_VALUE_WHITE  =		    1806;				/////产品工作IDDIO电流限定值
+//彩图画面
+u16 IDD_WORK_LIMIT_VALUE_COLOR  =         4000;				/////产品工作IDD电流限定值 单位：10uA
+u16	IOIDD_WORK_LIMIT_VALUE_COLOR  =		    2500;				/////产品工作IDDIO电流限定值
+//睡眠
+u16	IDD_SLEEP_LIMIT_VALUE  =			  40;				/////产品SLEEP  IDD电流限定值 单位：uA
+u16	IOIDD_SLEEP_LIMIT_VALUE  =		  80;				/////产品SLEEP  IDDIO电流限定值
+//背光定电流输出
+u16 led0pwmval=0x003D; //0x40
+
+//==========================================================================================
+u8  HorA=0xFF;                                   //HorA --->  0为手动跑画面    ，  1为自动跑画面
+
 void LCD_Vol_SET(void)
 //+++++++++++++++++++++++++++++++++LCD电压设定++++++++++++++++++++++++++++++++++++++++ 	
 {
-	GPIO_InitTypeDef GPIO_InitStructure;	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA |RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD
-	                                         | RCC_APB2Periph_AFIO, ENABLE); 
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
-		
-	///*[把GPIOB 对应端口配置成输出模式] */  PB15 for VDDIO EN
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_15;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	///*[把PA 对应端口配置成输出模式] */     PA1 for VDD EN
-	GPIO_InitStructure.GPIO_Pin =GPIO_Pin_0| GPIO_Pin_1|GPIO_Pin_3|GPIO_Pin_4 ;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
-	GPIO_Init(GPIOA, &GPIO_InitStructure); 
+	Vol_GPIO_Configuration();
 	
-	VDD_ADJ_SET(335);			 //VDD_ADJ_SET 参数取值范围270~620，对应电压范围2.7V~6.2V; 
+	VDD_ADJ_SET(285);			 //VDD_ADJ_SET 参数取值范围270~620，对应电压范围2.7V~6.2V; 
 	VDD_ADJ_EN(1);				 //使能VDD输出		
-	GPIO_SetBits(GPIOA, GPIO_Pin_1);  //真正的使能，此处是明神好心挖的坑，后续待修改
 
 	VDDIO_ADJ_SET(205);			  //VDDIO_ADJ_SET 参数取值范围150~360,对应电压范围1.5V~3.6V; 但是输出值因为二极管压降的问题，会比设定值低约0.3V, 
 	VDDIO_ADJ_EN(1);			  //使能VDDIO输出
-  
-	VOTP_ADJ_SET(390);			  //VOTP_ADJ_SET 参数取值范围150~2080，对应电压范围1.5V~14.1V; 
+  	
+	VOTP_ADJ_SET(300);			  //VOTP_ADJ_SET 参数取值范围150~2080，对应电压范围1.5V~14.1V; 
 	VOTP_EN(0);					  //使能VOTP输出	
 }	
 /*------------------------------------USER  START，万恶的分割线-------------------------------------------*/
 //================================================================================================================
 
 int main(void)  
-{ u16 cird [100]; 
-	u16 cc;
+{ 
+	u16 cird [100]; u16 cc;
 	u16 mm_KEY_UP = 1 ;
 	u16 mm_KEY_DOWN = 1 ;
 	u16 mm_KEY_PAUSE = 1;
-	u8 CurrentRetryflag=0;
+	u16 delay_time=0,kkk;
+	
+	
 	u8 ID_RIGHT;
 //	u8 PicNumTemp=1;
 //	u32  m=0;
@@ -149,6 +158,7 @@ int main(void)
 	//-----------------------------废话1分割线---------------------------
 
 	KEYGPIO_Init();							 //----	---对按鍵板進行初始化	
+	
 	EEPROM_GPIO_Config();					 //----	---对芯片進行配置	
 	EEpromRead_CurrentCalibration();		 //----读取EEprom存储的系数及电流校准
 	
@@ -162,38 +172,42 @@ int main(void)
 	
 //----------VDD大電流檢測 	-----IOVDD大電流檢測-------------------------
 //--若此时电流超过20000/100=200ma则认为电源短路，切断电源，蜂鸣器一长2短鸣叫，同时背光闪烁	
-	while (Measure_I_5TimesForProtectIDD(20000)|	Measure_I_5TimesForProtectIDDIO(20000))	
-    {	
-			BEEP_ON();DelayMs(500);BEEP_BIBI();//	BEEP_ON();DelayMs(1000);BEEP_BIBI();
-			BACK_LIGHT_OFF();DelayMs(300);BACK_LIGHT_ON();DelayMs(300);	BACK_LIGHT_OFF();DelayMs(300);BACK_LIGHT_ON();
-      if( CurrentRetryflag==0)  //防止连续开机误大电流报警
-			{LCD_Vol_SET();CurrentRetryflag++;}
-      else 
-			{
-				 while  (1)
-				 {BACK_LIGHT_OFF();DelayMs(30);BACK_LIGHT_ON();DelayMs(30);}
-      }			
-    }			
+  POWER_ON_CHECK();		
 //--------------------------配合分割线----------------------------------------------		
-	  BACK_LIGHT_OFF(); //次函数包含了背光控制脚PC7的初始化
-		BACK_LIGHT_ON();  //先执行 BACK_LIGHT_OFF();或PC7先初始化后，本函数才正常
+	BACK_LIGHT_OFF(); //次函数包含了背光控制脚PC7的初始化
+	BACK_LIGHT_ON();  //先执行 BACK_LIGHT_OFF();或PC7先初始化后，本函数才正常
 //***************************废话说完了好像************************************
-				 
-		STM32_Init_SSD2828();					 //----	---对SSD2828&LCD 初始化	
-//        TSL_GPIO_Config();
-////	//-----------------------------?????---------------------------------------
-//     
-//	 M2481_EN_Pin_Configuration();	
-//   PWM_Pin_configuration();  //??PWM 
-//	 TIM4_Configuration();			//??PWM  
-//	 M2481_PWM_scan(1); 
-////--------------------------------------------------------------------------------
-	  EXTI_Configuration();        
-		
-while (1)
-	{
-		Allcolor(1,WHITE_bmp);		     DelayMs(100);//刷白
 
+	STM32_Init_SSD2828();					 //----	---对SSD2828&LCD 初始化	
+	TSL_GPIO_Config();
+//	//-----------------------------背光驱动板---------------------------------------
+     
+	 M2481_EN_Pin_Configuration();	
+   PWM_Pin_configuration();  //配置PWM 
+	 TIM4_Configuration();			//配置PWM  
+	 M2481_PWM_scan(1); 
+////--------------------------------------------------------------------------------			
+//	 EXTI_Configuration();    
+  // Init_External_EEPROM();	       //注：此型号无法Debug，若要Debug，请屏蔽此句，但流水ID模块失效
+
+	
+while (1)
+	{	
+		
+    Allcolor(1,WHITE_bmp);		     DelayMs(100);//刷白 	DelayKEY(2);	
+		
+		//	GAMMA_LINE_CHECK();	
+		
+		
+		
+//调光		
+//		mm_KEY_DOWN = KEY_AUTO_MODE;
+//		if(mm_KEY_DOWN==0)
+//		{			
+//			Adjust_Output_Current(1);
+//			DelayKEY(5);
+//		}
+		
 		////////以下代碼內部測試用。。。
 //	mm_KEY_UP = KEY_UP;
 //	if(mm_KEY_UP == 0)
@@ -207,24 +221,23 @@ while (1)
 //		Forward_scan();				         DelayMs(50);//正掃，該函數可根據實際需要去除
 
 //--------------------------------------------------------------------------------		
-////判斷ID是否未燒	 	
-//    	CHECK_ID_again();
+//*************************************
+////判斷ID or gamma是否未燒	 	           // 流水ID
+//		ID_READ();      //ID    回读
+//		Gamma_READ();   //Gamma 回读
+		VCOM_READ();    //Vcom  回读
+////*************************************
 //		mm_KEY_DOWN = KEY_AUTO_MODE;
-		ID_RIGHT=ID_CHECK();
-//		if((mm_KEY_DOWN!=0)&&(ID_RIGHT==1))
+//		if(mm_KEY_DOWN!=0)
 //		{	
-//		  OTP_ID_NG();
-//			while(1)
-//			{
-//      	BEEP_Dudu();
-//			}			
+//			Gamma_Check();
+//			ID_CHECK();    		
 //		}
-//		
+		SSD2828_VIDEO_MODE_HS();
+	  DelayMs(10);
 //--------------------------------------------------------------------------------	
 		
 ////請在此處定義您所需顯示的產品訊息！務必在尾部加上適當延時    ps*-->( min 50 ms )			
-//2015.4.11该型号WDT要求只烧VCOM
-
 		ShowTxt("48,20,299, ");	  				             DelayMs(150);
         ShowTxt("60,20,0,052WA51_V1");	  				       DelayMs(150);	
         ShowTxt("60,20,100,FT8006M");	  				       DelayMs(150);	
@@ -245,27 +258,29 @@ while (1)
                 break;
 		}
 		DelayKEY(350);
-//        while(1);
-		
-/************************2014.10.30**************************************/
+	
+/////************************2014.10.30**************************************/
 //		mm_KEY_DOWN = KEY_AUTO_MODE;
 //		if(mm_KEY_DOWN==0)
 //		{	
+//		showbmp (17);							DelayMs(180);  //测量彩图电流
+//    NORML_CAL_TEST(IDD_WORK_LIMIT_VALUE_COLOR,IOIDD_WORK_LIMIT_VALUE_COLOR); 	
+//			
 //    enter_sleep_mode();
 //		DelayMs(1500);
 //		DelayKEY(2);//供分析异常时使用
 //		
-//		SLEEP_CAL_TEST(); 
+//		SLEEP_CAL_TEST(IDD_SLEEP_LIMIT_VALUE,IOIDD_SLEEP_LIMIT_VALUE); 
 //		
 //    exit_sleep_mode();
 //    DelayMs(5);
 //		}
-/**************************************************************/
-
-//////////===================================手自動選擇==========================================	
-////   Backward_scan();	 	    DelayMs(50);   //反掃，該函數可根據實際需要去除
-///* 
-///*手動模式*/ 
+///**************************************************************/
+		
+////////===================================手自動選擇==========================================	
+//   Backward_scan();	 	    DelayMs(50);   //反掃，該函數可根據實際需要去除
+	 
+/*手動模式*/ 
    mm_KEY_UP = KEY_UP;
 	 if(mm_KEY_UP == 0)
 	 {
@@ -275,8 +290,7 @@ while (1)
 			{
 			 mm_KEY_UP = KEY_UP; 
 			}
-            MTP_PASS=1;
-            KEY_adjust();
+	    KEY_adjust();
 	 }
 /*_____________________________________________________________________________________*/	
 	 
@@ -285,82 +299,84 @@ while (1)
 	 if(mm_KEY_DOWN == 0)
 	 {	
 			showbmp (Flicker_OTP);				DelayMs(350);
+      //延遲15sec
+//			DelaySec(15);
+			
 			Auto_otp();	
-		  
-		  switch(OTP_TIMES)
-		  {
-			case 0x00: ShowTxt("60,20,1000,烧入0次");	   					DelayMs(150);   break;
-		  case 0x01: ShowTxt("60,20,1000,烧入1次");	   					DelayMs(150);   break; 
-		  case 0x03: ShowTxt("60,20,1000,烧入2次");	   					DelayMs(150);   break; 
-			case 0x07: ShowTxt("60,20,1000,烧入3次");	            DelayMs(150);   break;
-		  }	 	
+            switch(OTP_VALUE1)
+            {
+                case 0xA1: ShowTxt("60,20,1000,烧入0次");	   					DelayMs(150);   break;
+    //		    case 0x01: ShowTxt("60,20,1000,烧入1次");	   					DelayMs(150);   break; 
+    //		    case 0x03: ShowTxt("60,20,1000,烧入2次");	   					DelayMs(150);   break; 
+    //			case 0x07: ShowTxt("60,20,1000,烧入3次");	                    DelayMs(150);   break;
+                default:
+                    ShowTxt("60,20,1000,已烧入");	   					DelayMs(150);   break; 
+                    break;
+            }
+//			switch(OTP_TIMES)
+//			{
+//			case 0x00: ShowTxt("60,20,1010,烧入0次");	   					DelayMs(150);   break;
+//		  case 0xC1: ShowTxt("60,20,1010,烧入1次");	   					DelayMs(150);   break; 
+//		  case 0xC3: ShowTxt("60,20,1010,烧入2次");	   					DelayMs(150);   break; 
+//			case 0xC7: ShowTxt("60,20,1010,烧入3次");	            DelayMs(150);   break;
+//			default:   ShowTxt("60,20,1010,烧入4次");	            DelayMs(150);   break;
+//			}		 
+			DelayKEY(350);
+		 
 			while(1);
 //			{
-//   		   BACK_LIGHT_OFF();DelayMs(1000);BACK_LIGHT_ON();DelayMs(1000);
+//			   BACK_LIGHT_OFF();DelayMs(1000);BACK_LIGHT_ON();DelayMs(1000);
 //			} 	 
 	 }
 //////================================SELECT OFF=========================================== 	
 	 
-	 
+
 //////判斷VCOM是否未燒	 
 //////----------------------------------------------------------------------	 
 	 else
-
 	 {
-//		VCOM_TIMES_Check(0xE8);
-//	 	if(OTP_TIMES == 0x00)     //如果一次未燒，提示OTP未燒   
-//		{	                         //若IC無回讀次數功能，可將虛線內內容屏蔽
-//			OTP_NO();	
-//		}		 
-	 }	
-//*/
+		VCOM_TIMES_Check();   //回读vcom times
+		SSD2828_VIDEO_MODE_HS();DelayMs(50);	 
+	 	if(OTP_TIMES == 0x00)     //如果一次未燒，提示OTP未燒   
+		{	                         //若IC無回讀次數功能，可將虛線內內容屏蔽
+			OTP_NO();	
+		}		 
+	 }	 
 //----------------------------------------------------------------------
-	DelayMs(200);   
-//	  Backward_scan();	 	    DelayMs(250);   //反掃，該函數可根據實際需要去除
-//    MTP_Recogn();
+	  DelayMs(250);   
+//	Backward_scan();	 	    DelayMs(50);   //反掃，該函數可根據實際需要去除
+
 /*循環電測畫面*/
 //在lcd.c文件中定義正確的電測畫面總數	 ，特殊畫面--》flick_otp\flicker_QC請正確定義其編號
 	LCDTEST:
-	 
-	switch(pic_num)
+	 switch(pic_num)
 	 {
-		case 1:       //第二次FLICKER调整完毕并不烧录
-		{
-				showbmp (1);	                  DelayMs(120); 
-//				MTP_PASS=0;
-//				KEY_adjust();			
-//			pic_num=2;	
-            break;
-		}
-		case 2:	 showbmp (2);               DelayMs(500);   break;	/////white
-		case 3:	 showbmp (3);             NORML_CAL_TEST();  DelayMs(500);   break; 	//black
-		case 4:	 showbmp (4);               DelayMs(120);   break; 	//baizong
-		case 5:  showbmp (5);            /*   NORML_CAL_TEST(); */       DelayMs(120);   break;
-		case 6:  showbmp (6);               DelayMs(120);   break;
-		case 7:  showbmp (7);               DelayMs(120);   break;  
-		case 8:  showbmp (8);               DelayMs(120);   break;	
-		case 9:  showbmp (9);               DelayMs(500);   break;	
-		case 10: showbmp (10);              DelayMs(300);   break;	
-		case 11: showbmp (11);              DelayMs(300);   break;	
-		case 12: showbmp (12);              DelayMs(120);   break;	
-		case 13: showbmp (13);              DelayMs(120);   break;	
-		case 14: showbmp (14);              DelayMs(120);   break;	
-		case 15: showbmp (15);              DelayMs(120);   break;	
-		case 16: showbmp (16);              DelayMs(300);   break;	
-		case 17: showbmp (17);              DelayMs(120);   break;	
-		case 18: showbmp (18);              DelayMs(300);   break;	
-		case 19:        //第二次FLICKER调整完毕并烧录
-		{
-//				showbmp (19);              DelayMs(120);   
-//				MTP_PASS=1;
-//				KEY_adjust();				
-			pic_num++;	
-            break;	
-		}
-		default:
-			showbmp (pic_num);              DelayMs(300);   break;
-	 } 
-	 PassKey();
+		case 1:  showbmp (1);     					DelayMs(120);   M2481_PWM_scan(2);  break;  //此换面至少停顿5秒 
+	  case 2:  showbmp (2);     					DelayMs(120);   break;	//此换面至少停顿5秒		 
+		case 3:  showbmp (3);     					DelayMs(120);   break;
+		case 4:  showbmp (4);     					DelayMs(120);   break;
+		case 5:  showbmp (5);     					DelayMs(120);   break;
+		case 6:  showbmp (Flicker_OQC);	    DelayMs(120);   break;			
+		case 7:  showbmp (7);               DelayMs(120);   break;	//此换面至少停顿5秒
+		case 8:	 showbmp (8);               DelayMs(120);   break;	
+		case 9:	 showbmp (9);               DelayMs(120);   break; 	//NGLINE		 
+		case 10: showbmp (10);              DelayMs(120);   break;	
+		case 11: showbmp (11);              DelayMs(120);   break;
+		case 12: showbmp (12);              DelayMs(120);   break;
+		case 13: showbmp (13);              DelayMs(120);   break;
+		case 14: showbmp (14);              DelayMs(120);   break;	 
+		case 15: showbmp (15);              DelayMs(120);   break;	//此换面至少停顿5秒
+    case 16: showbmp (16);							DelayMs(120);   break;	
+    case 17: showbmp (17);							DelayMs(120);   M2481_PWM_scan(2);   break;	
+    case 18: M2481_PWM_scan(0);					showbmp (18);DelayMs(120);     break;			
+
+   //%&^%&^%&^%&^%&%&^%&^%&^%*&%
+
+	GAMMA_LINE_CHECK();	
+
+	 }
+	 
+	 PassKey();   //HorA --->  0为手动跑画面    ，  1为自动跑画面
 			 
 	 goto LCDTEST;
 
@@ -405,8 +421,9 @@ void IDD_IOIDD_show(void)
 
 void PassKey(void)
 {
+	u32 coun=0;
 	u16 mm1,mm2,mm3;
-
+  
 	mm1=mm2=mm3=1;    //進入待機模式
 
 			
@@ -414,57 +431,137 @@ void PassKey(void)
 	 mm2=KEY_DOWN;   //後退
 	 mm3=KEY_PAUSE;    //進入待機模式
 	 DelayMs(1);
-	
-	 while((mm1!=0)&&(mm2!=0)&&(mm3!=0))
+/*******手动跑画面********/	 
+	coco:	
+   if(HorA==0)	
+   {	
+		 while((mm1!=0)&&(mm2!=0)&&(mm3!=0))
+		 {
+			mm1=KEY_DOWN;	
+			mm2=KEY_UP;
+			mm3=KEY_PAUSE;	
+			DelayMs(50);  
+				if(show_promise==1)
+				{
+					IDD_IOIDD_show();		
+				}
+        if((mm1==0)&&(mm2==0)&&(mm3!=0))      //如果+/-键按同时按下 ，进入手动跑画面模式
+				{
+					HorA=~HorA;
+					BEEP_BIBI();
+					while(mm1==0||mm2==0)   //等待按键释放
+					{
+					mm1=KEY_DOWN;
+					mm2=KEY_UP;
+					}
+				  goto coco;
+				}				
+		 }
+		 if(mm1==0)
+		 {			 
+			pic_num++;	 
+			if(pic_num>PIC_NUM)
+			{
+				pic_num=1;
+			}
+		}
+		else if(mm2==0)
+		{	
+			pic_num--;	   
+			if(pic_num==0)
+			{
+				pic_num=PIC_NUM;
+//				Backward_scan();	 	    DelayMs(50);
+			}
+		}
+		else if(mm3==0)
+		{
+			enter_sleep_mode();
+			DelayMs(1500);
+			
+			SLEEP_CAL_TEST(IDD_SLEEP_LIMIT_VALUE,IOIDD_SLEEP_LIMIT_VALUE);    //测量待机电流
+			
+			mm3=1;				
+			while(mm3!=0)
+			{
+				mm3=KEY_PAUSE;
+			}		
+			exit_sleep_mode();
+			DelayMs(50); 
+		}	
+
+		while(mm1==0||mm2==0||mm3==0)   //等待按键释放
+		{
+			mm1=KEY_DOWN;
+			mm2=KEY_UP;
+			mm3=KEY_PAUSE;
+		}	
+   }
+/********自动跑画面********/	 
+	 else
 	 {
-		mm1=KEY_DOWN;	
-		mm2=KEY_UP;
-		mm3=KEY_PAUSE;	
+		 do
+		 {
+	    mm1=KEY_UP;   //前進
+      mm2=KEY_DOWN;   //後退
+	    mm3=KEY_PAUSE;    //進入待機模式			 
+			if(mm3==0)      //如果pause键按下，画面暂停，再按一次则继续跑动
+			{	   
+					while((mm3==0)&&(mm2!=0)&&(mm1!=0))   //等待按键释放
+					{mm3=KEY_PAUSE;}
+	//				DelayMs(500);	
+					mm3=1;					
+					while(mm3!=0)   //等待按键被再次按下，允许画面继续跑动
+					{mm3=KEY_PAUSE;}
+				
+					while(mm3==0)   //等待按键释放
+					{mm3=KEY_PAUSE;}				
+			}
+			if((mm1==0)&&(mm2==0)&&(mm3!=0))      //如果+/-键按同时按下 ，进入自动跑画面模式
+	    {
+					HorA=~HorA;
+					BEEP_BIBI();
+					while(mm1==0||mm2==0)   //等待按键释放
+					{
+					mm1=KEY_DOWN;
+					mm2=KEY_UP;
+		      }
+					goto coco;
+	    }
+			coun++; 
+			DelayMs(1);
 			if(show_promise==1)
 			{
-				IDD_IOIDD_show();		
-			}			
+				 IDD_IOIDD_show();		
+			}	
+		 }while(coun<1600);
+		 
+//-----------------------------------		 
+	   if(pic_num==17)
+		 {
+			DelayMs(7000);
+		 }
+     else if(pic_num==1)
+		 {
+      DelayMs(8000);	
+		 }
+		 else
+		 {
+			DelayMs(800);
+		 }
+		  
+//-----------------------------------			
+			
+		 pic_num++;
+		 if(pic_num>PIC_NUM)
+		 {
+			 pic_num=1;
+//			 Sleep_Test(1500); 
+		 }	 
 	 }
-	 if(mm1==0)
-	 {			 
-		pic_num++;	 
-		if(pic_num>PIC_NUM)
-		{
-			pic_num=1;
-		}
-	}
-	else if(mm2==0)
-	{	
-		pic_num--;	   
-		if(pic_num==0)
-		{
-			pic_num=PIC_NUM;
-		}
-	}
-	else if(mm3==0)
-	{
-//		enter_sleep_mode();
-//		DelayMs(1500);
-//		
-//    SLEEP_CAL_TEST();    //测量待机电流
-//		
-//		mm3=1;				
-//		while(mm3!=0)
-//		{
-//			mm3=KEY_PAUSE;
-//		}		
-//		exit_sleep_mode();
-//		DelayMs(50); 
-		;  //不进待机
-	}			 
-	while(mm1==0||mm2==0||mm3==0)   //等待按键释放
-	{
-		mm1=KEY_DOWN;
-		mm2=KEY_UP;
-		mm3=KEY_PAUSE;
-	}	
-	
-	DelayMs(50);		 
+	 
+	 DelayMs(50);	
+ 	
 } 
 
 void BACK_LIGHT_ON(void)
@@ -484,10 +581,10 @@ void BACK_LIGHT_OFF(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-
 	
 	GPIO_ResetBits(GPIOC, GPIO_Pin_7);  // 
 }	 
+
 //-------------------------------------------------------------------------------------------------
 
 void Delay(u32 time)
@@ -501,7 +598,15 @@ void Delay(u32 time)
 //	}
 	Dly_10ns(4000*time);
 }
-
+void DelaySec(u32 time)
+{
+		  //延遲15sec
+	    u32 i;
+		  for(i=0;i<time;i++)
+			{
+				DelayMs(1000);
+			}
+}
  
 //---------------------------------------以下内容请勿修改------------------------------------------
 //=================================================================================================
@@ -511,8 +616,7 @@ void DelayMs(__IO uint32_t nTime)
   while(TimingDelay != 0); 
 }
 void SYSinitialize (void)
-{  
-	 RCC_Configuration();
+{  RCC_Configuration();
 	 NVIC_Configuration();
    USART_REMAP_GPIO_Configuration(); 
    SysTick_Config(72000);   //因为未使用外部时钟，所以此次参数  待定 ; ==/SysTick_Config(SystemCoreClock/1000); == SysTick_Config(72000);

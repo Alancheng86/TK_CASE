@@ -15,7 +15,7 @@
 #define VDD_ADJ_EN(x)   GPIOA->ODR=(GPIOA->ODR&~VDD_ADJPin_EN)|(x ? VDD_ADJPin_EN:0)
 
 #define	VDDIO_ADJPin_EN	(1<<15)  //VDDIO_ADJ片选端口
-#define VDDIO_ADJ_EN(x)   GPIOB->ODR=(GPIOB->ODR&~VDDIO_ADJPin_EN)|(x ? VDDIO_ADJPin_EN:0)
+#define VDDIO_ADJ_EN(x) GPIOB->ODR=(GPIOB->ODR&~VDDIO_ADJPin_EN)|(x ? VDDIO_ADJPin_EN:0)
 
 #define	VOTP_ADJPin_EN	(1<<4)  //VOTP_ADJ片选端口
 #define VOTP_EN(x)   GPIOA->ODR=(GPIOA->ODR&~VOTP_ADJPin_EN)|(x ? VOTP_ADJPin_EN:0)
@@ -30,9 +30,9 @@
 #define A1_EN(x)   GPIOA->ODR=(GPIOA->ODR&~LS138_A1_EN)|(x ? LS138_A1_EN:0)
 
 void VDD_ADJ_SET(u32 VDD_settig);		 //VDD_ADJ_SET 参数取值范围270~600，对应电压范围2.7V~6V; 
-void VDDIO_ADJ_SET(u32 vset);			 //VDDIO_ADJ_SET 参数取值范围160~360，对应电压范围1.6V~3.6V; 
-void VOTP_ADJ_SET(u32 vset);			 //VOTP_ADJ_SET 参数取值范围150~2080，对应电压范围1.5V~14.1V; 
-
+void VDDIO_ADJ_SET(u32 vset);			   //VDDIO_ADJ_SET 参数取值范围160~360，对应电压范围1.6V~3.6V; 
+void VOTP_ADJ_SET(u32 vset);			   //VOTP_ADJ_SET 参数取值范围150~2080，对应电压范围1.5V~14.1V; 
+void Vol_GPIO_Configuration(void);   //vol 管脚配置
 //-----------------------------------------------------------------------
 #endif
 

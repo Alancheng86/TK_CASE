@@ -56,6 +56,7 @@ void V3ADJ_SET(char vset,char plus50mv);
 void STM_MINI_SET(void);
 void STM32_Init_SSD2828(void);
 
+
 void SSD2828_Inition(void);
 void MIPI_SPI_Write(uint i,...);
 
@@ -68,7 +69,7 @@ void SSD2828_VIDEO_MODE_HS(void);
 
 void Forward_scan(void);
 void Backward_scan(void);
-void SSD2828_inition_lcd_Check(void); 
+
 u16  READ_SSD2828(u8 CMD);
 u8 READ_IC(u8 cmd,u8 cmd1);
 u8 READ_IC_A(u8 cmd,u8 cmd1);  //读2828从LCD ic中取回来的值

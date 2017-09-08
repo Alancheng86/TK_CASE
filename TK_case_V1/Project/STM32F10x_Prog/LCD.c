@@ -10,6 +10,9 @@
 #include "T226.h"
 #include "OTP.h"
 
+
+extern void  BACK_LIGHT_OFF(void);	
+extern void  BACK_LIGHT_ON(void);	
 extern void Delay(u32 nCount);
 u8 MIPI_READ_DATA[10] = {0,0,0,0,0,0,0,0,0,0};
 uint MIPI_Array[150];
@@ -22,6 +25,7 @@ extern u8 ID2_VALUE;
 extern u8 ID3_VALUE;
 extern u16 VCOMDC1;
 extern void DelayMs(__IO uint32_t nTime);
+extern u8 ID_OK;
 extern u8 MTP_OVER;
 /*******************************************************************************
 ÔÚ´ËÌŽ¶¨ÁxÕý´_µÄëŠœy®‹Ãæ¿‚”µ	 £¬ÌØÊâ®‹Ãæ--¡·flick_otp\flicker_QCÕˆÕý´_¶¨ÁxÆä¾ŽÌ–
@@ -41,16 +45,18 @@ u32 GURY_45_bmp    =   0x2D2D2D;    //45»Ò
 u32 GURY_60_bmp    =   0x3C3C3C;    //60»Ò
 u32 GURY_128_bmp   =   0x7D7D7D;    //128»Ò
 
+
 #define HXD720x1280_052WA51_FT8006M
-//#define HXD800x1280_080WQ18_JD9366
 //#define V480x800_SC7798
 //#define V480x800_HX8369
 //#define QHD540x960_HX8389
-//#define HD720x1280
+//#define QHD540x960_HX8389B
+//#define HD720x1280_OTM1284A
 //#define HXD800x1280
 //#define FHD1080x1920
 //#define FHD1200x1920
 // #define V480x800_GPM1461A0
+//#define HD720x1280_ILI9881C
 
 //----------------------------------------------
 #ifdef V480x800_HX8369       
@@ -953,6 +959,7 @@ u16	 VPW=4;  //Í¨³£²»ÐèÒªµ÷Õû
 u8 PIC_NUM=14;       //ëŠœy®‹Ãæ×ÜÊý
 u8 Flicker_OTP=3;    //OTP flicker ®‹Ãæ¾ŽÌ–
 u8 Flicker_OQC=1;    //QC flicker  ®‹Ãæ¾ŽÌ–
+
 //-------------------------------------------------------------------
 //vcom½×´ÎÉè¶¨·½Ê½
 void VCOM_set(u8 vcom)
@@ -966,7 +973,7 @@ void ID_set(void)
 	MIPI_SPI_Write(4,0xB9,0xFF,0x83,0x89);
 	////#                   1    2    3
 //	Delay (2);
-	MIPI_SPI_Write(0x04,0xC3,0x53,0x44,0x90);
+	MIPI_SPI_Write(0x04,0xC3,0x53,0x44,0x90);//
 }	
 
 void SSD2828_inition_lcd(void)    //IC³õÊ¼»¯
@@ -1114,16 +1121,8 @@ void MTP(void)
 	MIPI_SPI_Write(0x01,0x11);
 	DelayMs(200);
 
-//	MIPI_SPI_Write(4 ,0xB6,0x3f,0x3f,0x00); 	 ////set vcom	
-	MIPI_SPI_Write(4 ,0xB6,VCOMDC1,VCOMDC1,0x00); 	 ////set vcom		
+	MIPI_SPI_Write(4 ,0xB6,VCOMDC1,VCOMDC1,0x00); 	 ////set vcom			
 
-
-//	MIPI_SPI_Write(0x04,0xC3,0x53,0x44,0x90);
-//	DelayMs(10);			   ////delay 10ms
-
-	
-	/////#Set Inertmal power 8.25V to OTP_PWR
-	/////#WRITE VCOM 
 	MIPI_SPI_Write(0x07,0xBB,0xAA,0x55,0x00,0x0D,0X00,0x10);
 	DelayMs(200);	
 	
@@ -1135,7 +1134,6 @@ void MTP(void)
 
 
 }
-
 /*******************************************************************************
 * Function Name  : void MTP_ID(void)
 * Description    : otp -> ID       //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
@@ -1145,14 +1143,7 @@ void MTP(void)
 *******************************************************************************/  
 
 void MTP_ID(void)
-{
-//	LCD_RST(1) ;
-//	MDelay(50);
-//	LCD_RST(0);//////////Ó²¼þ¸´Î»
-//	MDelay(50);
-//	LCD_RST(1) ;
-//	DelayMs(500);  
-  	
+{ 	
 	MIPI_SPI_Write( 4,0xB9,0xFF,0x83,0x89);  
 	DelayMs (10);
 	
@@ -1167,11 +1158,8 @@ void MTP_ID(void)
 	MIPI_SPI_Write(0x01,0x11);
 	DelayMs(200);
 
-
 	MIPI_SPI_Write(0x04,0xC3,0x53,0x44,0x90);
 	DelayMs(10);			   ////delay 10ms
-
-	
 	/////#Set Inertmal power 8.25V to OTP_PWR
 	/////#WRITE VCOM 
 	MIPI_SPI_Write(0x07,0xBB,0xAA,0x55,0x00,0x00,0X00,0x10);
@@ -1179,547 +1167,222 @@ void MTP_ID(void)
 	
 	MIPI_SPI_Write(0x07,0xBB,0xAA,0x55,0x00,0x00,0x00,0x11);
 	DelayMs(100);	
-
+	
 	MIPI_SPI_Write(0x07,0xBB,0xAA,0x55,0x00,0x00,0x00,0x00);
 	DelayMs(400);		
 }
 
-
 #endif
 
-#ifdef HXD800x1280_080WQ18_JD9366
+
+#ifdef QHD540x960_HX8389B
 //////mipi video mode setting
-u16 value_HighSpeed = 580;      ///520
-u16 value_Lane_select = 4;
-   
-u16  VDP= 1280;      
-u16  VBP= 18;    //25   3     16    12
-u16  VFP= 8;    //35   8     18    26   12
+u16 value_HighSpeed = 330;
+u16 value_Lane_select = 3;
+//power lovel 3.0v \1.8v
+u16  VDP= 960;      
+u16 VBP= 8;   // 15		   8
+u16 VFP= 9;	  // 5		  9
 
-u16  HDP= 800;     
-u16  HBP= 80;     //	60   59    56      45
-u16  HFP= 40;     //	80   16    58       46
+u16  HDP= 540;
+u16 HBP= 66;   //30			 66
+u16 HFP= 22;	//10		 22
 
-u16	 HPW=40;  //Í¨³£²»ÐèÒªµ÷Õû  5           20
-u16	 VPW=4;  //Í¨³£²»ÐèÒªµ÷Õû  5            4
-/////////////080WQ USE    inition/////
+u16	 HPW=20;  //Í¨³£²»ÐèÒªµ÷Õû	   20
+
+u16	 VPW=2;  //Í¨³£²»ÐèÒªµ÷Õû	   2
+
+/////////////CLAN050LQ  USE    inition/////
 u8 PIC_NUM=13;       //ëŠœy®‹Ãæ×ÜÊý
 u8 Flicker_OTP=1;    //OTP flicker ®‹Ãæ¾ŽÌ–
-u8 Flicker_OQC=1;    //QC flicker  ®‹Ãæ¾ŽÌ–
+u8 Flicker_OQC=2;    //QC flicker  ®‹Ãæ¾ŽÌ–
 //-------------------------------------------------------------------
 //vcom½×´ÎÉè¶¨·½Ê½
 void VCOM_set(u8 vcom)
 {
-    
-    MIPI_SPI_Write( 2, 0xE0,0x01); 
-    MIPI_SPI_Write( 2, 0x01,0X55);
-    MIPI_SPI_Write( 2, 0xE0,0x00); 
-    DelayMs( 20);
-    
-     MIPI_SPI_Write( 2, 0xE0,0x01); 
-    
-    MIPI_SPI_Write( 2, 0x00,0x00); 
-    MIPI_SPI_Write( 2, 0x01,vcom);
-
+    MIPI_SPI_Write(5,0xB6,0x00,vcom,0x00,vcom);
 }   
 //IDÖµÉè¶¨·½Ê½
 void ID_set(void)
 {
+   ////#B9 Set EXTC
+	MIPI_SPI_Write(4,0xB9,0xFF,0x83,0x89);
+	////#                   1    2    3
+//	Delay (2);
+	MIPI_SPI_Write(0x04,0xC3,0x53,0x44,0x90);
+}	
 
-}		
 void SSD2828_inition_lcd(void)    //IC³õÊ¼»¯
-{
-//#=========================================================
-//#  Main LDI Power ON Sequence
-//#=========================================================
-
-MIPI_SPI_Write( 2, 0xe0,0x00);
-
-//#//--- password  ----//
-MIPI_SPI_Write( 2, 0xe1,0x93);
-MIPI_SPI_Write( 2, 0xe2,0x65);
-MIPI_SPI_Write( 2, 0xe3,0xf8);
-MIPI_SPI_Write( 2, 0x80,0x03);  //#for ESD
-
-//#//--- page1  ----//
-MIPI_SPI_Write( 2, 0xe0,0x01);
-
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#
-//#//set vcom
-//MIPI_SPI_Write( 2, 0x00,0x00);
-//MIPI_SPI_Write( 2, 0x01,0xb7);   //#//0xb5(VCOM??)
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#
-
-//#mipi.write 0x37,0x08 //#(????????) 
-//#MIPI_SPI_Write( 2, 0x00,0x00  //#(IC register shift) 
-//#mipi.write 0x06,0x01  
-//#mipi.read 
-
-//#//set gamma power, vgmp,vgmn,vgsp,vgsn
-MIPI_SPI_Write( 2, 0x17,0x00);
-MIPI_SPI_Write( 2, 0x18,0xcf);    //#source 4.7v
-MIPI_SPI_Write( 2, 0x19,0x01);
-MIPI_SPI_Write( 2, 0x1a,0x00);
-MIPI_SPI_Write( 2, 0x1b,0xcf);  
-MIPI_SPI_Write( 2, 0x1c,0x01);
-
-//#//set gate power
-MIPI_SPI_Write( 2, 0x1f,0x3e);    //#VGH
-MIPI_SPI_Write( 2, 0x20,0x28);    //#VGL
-MIPI_SPI_Write( 2, 0x21,0x28);
-MIPI_SPI_Write( 2, 0x22,0x0e);
-
-MIPI_SPI_Write( 2, 0x24,0x08);  //#//0xC8, [7]:vgh_en=0,[6]:vgl_en=0,[5]:avdd_en=0,[4]:avee_en=0
-
-
-//#//set rgbcyc
-MIPI_SPI_Write( 2, 0x37,0x29);	//#//[5:4]enz[1:0]=10, [3]ss=1, [0]bgr=1
-MIPI_SPI_Write( 2, 0x38,0x05);	//#//jdt=101 zigzag inversion
-MIPI_SPI_Write( 2, 0x39,0x08);	//#//rgb_n_eq1, modify 20140806
-MIPI_SPI_Write( 2, 0x3a,0x12);	//#//rgb_n_eq2, modify 20140806
-MIPI_SPI_Write( 2, 0x3c,0x78);	//#//set eq3 for te_h
-MIPI_SPI_Write( 2, 0x3d,0xff);	//#//set chgen_on, modify 20140827 
-MIPI_SPI_Write( 2, 0x3e,0xff);	//#//set chgen_off, modify 20140827 
-MIPI_SPI_Write( 2, 0x3f,0xff);	//#//set chgen_off2, modify 20140827
-
-
-
-
-//#//set tcon
-MIPI_SPI_Write( 2, 0x40,0x06);	//#//rso=800 pixels
-MIPI_SPI_Write( 2, 0x41,0xa0);	//#//ln=640->1280 line
-MIPI_SPI_Write( 2, 0x43,0x15);	//#//vfp  21
-MIPI_SPI_Write( 2, 0x44,0x12);	//#//vbp   18
-MIPI_SPI_Write( 2, 0x45,0x50);	//#//hbp   80
-MIPI_SPI_Write( 2, 0x4b,0x04);
-
-//#//--- power voltage  ----//
-MIPI_SPI_Write( 2, 0x55,0x0f);	//#//dcdcm=1111, external pwoer ic
-MIPI_SPI_Write( 2, 0x56,0x01);
-MIPI_SPI_Write( 2, 0x57,0x89);
-MIPI_SPI_Write( 2, 0x58,0x0a);
-MIPI_SPI_Write( 2, 0x59,0x2a);	//#//vcl = -2.9v
-MIPI_SPI_Write( 2, 0x5a,0x31);	//#//vgh = 19v
-MIPI_SPI_Write( 2, 0x5b,0x15);	//#//vgl = -11v
-
-//#//--- gamma ++  ----//
-MIPI_SPI_Write( 2, 0x5d,0x7c);
-MIPI_SPI_Write( 2, 0x5e,0x50);
-MIPI_SPI_Write( 2, 0x5f,0x3b);
-MIPI_SPI_Write( 2, 0x60,0x2b);
-MIPI_SPI_Write( 2, 0x61,0x25);
-MIPI_SPI_Write( 2, 0x62,0x15);
-MIPI_SPI_Write( 2, 0x63,0x1a);
-MIPI_SPI_Write( 2, 0x64,0x04);
-MIPI_SPI_Write( 2, 0x65,0x1c);
-MIPI_SPI_Write( 2, 0x66,0x1a);
-MIPI_SPI_Write( 2, 0x67,0x19);
-MIPI_SPI_Write( 2, 0x68,0x36);
-MIPI_SPI_Write( 2, 0x69,0x27);
-MIPI_SPI_Write( 2, 0x6a,0x2f);
-MIPI_SPI_Write( 2, 0x6b,0x23);
-MIPI_SPI_Write( 2, 0x6c,0x21);
-MIPI_SPI_Write( 2, 0x6d,0x17);
-MIPI_SPI_Write( 2, 0x6e,0x05);
-MIPI_SPI_Write( 2, 0x6f,0x00);
-
-//#//--- gamma --  ----//
-MIPI_SPI_Write( 2, 0x70,0x7c);
-MIPI_SPI_Write( 2, 0x71,0x50);
-MIPI_SPI_Write( 2, 0x72,0x3b);
-MIPI_SPI_Write( 2, 0x73,0x2b);
-MIPI_SPI_Write( 2, 0x74,0x25);
-MIPI_SPI_Write( 2, 0x75,0x15);
-MIPI_SPI_Write( 2, 0x76,0x1a);
-MIPI_SPI_Write( 2, 0x77,0x04);
-MIPI_SPI_Write( 2, 0x78,0x1c);
-MIPI_SPI_Write( 2, 0x79,0x1a);
-MIPI_SPI_Write( 2, 0x7a,0x19);
-MIPI_SPI_Write( 2, 0x7b,0x36);
-MIPI_SPI_Write( 2, 0x7c,0x27);
-MIPI_SPI_Write( 2, 0x7d,0x2f);
-MIPI_SPI_Write( 2, 0x7e,0x23);
-MIPI_SPI_Write( 2, 0x7f,0x21);
-MIPI_SPI_Write( 2, 0x80,0x17);
-MIPI_SPI_Write( 2, 0x81,0x05);
-MIPI_SPI_Write( 2, 0x82,0x00);
-
-
-//#//page2, for gip
-MIPI_SPI_Write( 2, 0xe0,0x02);
-
-//#//gip_l pin mapping
-MIPI_SPI_Write( 2, 0x00,0x00);
-MIPI_SPI_Write( 2, 0x01,0x04);   
-MIPI_SPI_Write( 2, 0x02,0x08); 
-MIPI_SPI_Write( 2, 0x03,0x05); 
-MIPI_SPI_Write( 2, 0x04,0x09); 
-MIPI_SPI_Write( 2, 0x05,0x06); 
-MIPI_SPI_Write( 2, 0x06,0x0a); 
-MIPI_SPI_Write( 2, 0x07,0x07); 
-MIPI_SPI_Write( 2, 0x08,0x0b); 
-MIPI_SPI_Write( 2, 0x09,0x1f); 
-MIPI_SPI_Write( 2, 0x0a,0x1f); 
-MIPI_SPI_Write( 2, 0x0b,0x1f); 
-MIPI_SPI_Write( 2, 0x0c,0x1f); 
-MIPI_SPI_Write( 2, 0x0d,0x1f); 
-MIPI_SPI_Write( 2, 0x0e,0x1f); 
-MIPI_SPI_Write( 2, 0x0f,0x17); 
-MIPI_SPI_Write( 2, 0x10,0x37); 
-MIPI_SPI_Write( 2, 0x11,0x10); 
-MIPI_SPI_Write( 2, 0x12,0x1f); 
-MIPI_SPI_Write( 2, 0x13,0x1f); 
-MIPI_SPI_Write( 2, 0x14,0x1f); 
-MIPI_SPI_Write( 2, 0x15,0x1f); 
-
-//#//gip_r pin mapping
-MIPI_SPI_Write( 2, 0x16,0x00);
-MIPI_SPI_Write( 2, 0x17,0x04);   
-MIPI_SPI_Write( 2, 0x18,0x08); 
-MIPI_SPI_Write( 2, 0x19,0x05); 
-MIPI_SPI_Write( 2, 0x1a,0x09); 
-MIPI_SPI_Write( 2, 0x1b,0x06); 
-MIPI_SPI_Write( 2, 0x1c,0x0a); 
-MIPI_SPI_Write( 2, 0x1d,0x07); 
-MIPI_SPI_Write( 2, 0x1e,0x0b); 
-MIPI_SPI_Write( 2, 0x1f,0x1f); 
-MIPI_SPI_Write( 2, 0x20,0x1f); 
-MIPI_SPI_Write( 2, 0x21,0x1f); 
-MIPI_SPI_Write( 2, 0x22,0x1f); 
-MIPI_SPI_Write( 2, 0x23,0x1f); 
-MIPI_SPI_Write( 2, 0x24,0x1f); 
-MIPI_SPI_Write( 2, 0x25,0x17); 
-MIPI_SPI_Write( 2, 0x26,0x37); 
-MIPI_SPI_Write( 2, 0x27,0x10); 
-MIPI_SPI_Write( 2, 0x28,0x1f); 
-MIPI_SPI_Write( 2, 0x29,0x1f); 
-MIPI_SPI_Write( 2, 0x2a,0x1f); 
-MIPI_SPI_Write( 2, 0x2b,0x1f); 
-
-//#//gip timing  
-MIPI_SPI_Write( 2, 0x58,0x01); 
-MIPI_SPI_Write( 2, 0x59,0x00); 
-MIPI_SPI_Write( 2, 0x5a,0x00); 
-MIPI_SPI_Write( 2, 0x5b,0x00); 
-MIPI_SPI_Write( 2, 0x5c,0x0C); //#//stv_s0
-MIPI_SPI_Write( 2, 0x5d,0x60); 
-MIPI_SPI_Write( 2, 0x5e,0x00); 
-MIPI_SPI_Write( 2, 0x5f,0x00); 
-MIPI_SPI_Write( 2, 0x60,0x30); 
-MIPI_SPI_Write( 2, 0x61,0x00); 
-MIPI_SPI_Write( 2, 0x62,0x00); 
-MIPI_SPI_Write( 2, 0x63,0x03); //#//stv_on
-MIPI_SPI_Write( 2, 0x64,0x6a); //#//stv_off
-MIPI_SPI_Write( 2, 0x65,0x45); 
-MIPI_SPI_Write( 2, 0x66,0x14); //#// for G1280 1 line delay with RST
-MIPI_SPI_Write( 2, 0x67,0x73); 
-MIPI_SPI_Write( 2, 0x68,0x10); //#//ckv_s0
-MIPI_SPI_Write( 2, 0x69,0x06); //#//ckv_on
-MIPI_SPI_Write( 2, 0x6a,0x6a); //#//ckv_off
-MIPI_SPI_Write( 2, 0x6b,0x00); 
-MIPI_SPI_Write( 2, 0x6c,0x00); 
-MIPI_SPI_Write( 2, 0x6d,0x03); 
-MIPI_SPI_Write( 2, 0x6e,0x00); 
-MIPI_SPI_Write( 2, 0x6f,0x08); 
-MIPI_SPI_Write( 2, 0x70,0x00); 
-MIPI_SPI_Write( 2, 0x71,0x00); 
-MIPI_SPI_Write( 2, 0x72,0x06); 
-MIPI_SPI_Write( 2, 0x73,0x7b); 
-MIPI_SPI_Write( 2, 0x74,0x00); 
-MIPI_SPI_Write( 2, 0x75,0x80); 
-MIPI_SPI_Write( 2, 0x76,0x00); 
-MIPI_SPI_Write( 2, 0x77,0x05); 
-MIPI_SPI_Write( 2, 0x78,0x1b); //#//flm_off
-MIPI_SPI_Write( 2, 0x79,0x00); 
-MIPI_SPI_Write( 2, 0x7a,0x00); 
-MIPI_SPI_Write( 2, 0x7b,0x00); 
-MIPI_SPI_Write( 2, 0x7c,0x00); 
-MIPI_SPI_Write( 2, 0x7d,0x03); 
-MIPI_SPI_Write( 2, 0x7e,0x7b); 
-
-//#//page3
-MIPI_SPI_Write( 2, 0xe0,0x03);
-MIPI_SPI_Write( 2, 0x98,0x3e);	//#//from 2e to 3e, led on
-
-//#//page4  for ESD
-MIPI_SPI_Write( 2, 0xe0,0x04);
-MIPI_SPI_Write( 2, 0x09,0x10);  //#//sweep blanking source level=gnd
-MIPI_SPI_Write( 2, 0x2b,0x2b);
-MIPI_SPI_Write( 2, 0x2e,0x44);	
-
-//#Page0
-MIPI_SPI_Write( 2, 0xE0,0x00);
-MIPI_SPI_Write( 2, 0xE6,0x02);  //#for ESD
-MIPI_SPI_Write( 2, 0xE7,0x02);  //#for ESD
-DelayMs	( 5);
-                           
-//#SLP OUT                   
-MIPI_SPI_Write( 1, 0x11);      
-DelayMs( 120);                 
-
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#                           
-//MIPI_SPI_Write( 2, 0xE0,0x01); 
-//MIPI_SPI_Write( 2, 0x01,0xC5); //#???????VCOM 
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#Set__//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#
-
-//MIPI_SPI_Write( 2, 0xE0,0x00); 
-
-//#DISP ON
-MIPI_SPI_Write( 1, 0x29);  
-DelayMs	( 5);
-
-//#--- TE----//#
-MIPI_SPI_Write( 2, 0x35,0x00);
-//#MIPI_SPI_Write( 2, 0xB6,0x32,0x32);
-
+{  
+	////#B9 Set EXTC
+	MIPI_SPI_Write(4,0xB9,0xFF,0x83,0x89);
+	Delay (2);
+	//////#DE Set Power Option
+	MIPI_SPI_Write(3,0xDE,0x05,0x58);
+	Delay (2);	
+	////#B1 Set Power
+	MIPI_SPI_Write(20,0xB1,0x00,0x00,0x07,0xEF,0x50,0x05,0x11,0x74,0xF1,0x2A,0x34,0x26,0x26,0x42,0x01,0x3A,0xF5,0x20,0x80);
+////# param 8 ->92,Fosc/640,  72,fOSC/512
+////# 4->VGH , 5->VGL , 6 ->VGL_RES , 7->VRGH , 8->BTP , 9->BTN
+////#10->VRHP,11->VRHN , 12->VRMP , 13->VRMN
+	Delay (2);
+	//////#B2 set display related register 
+	MIPI_SPI_Write(8,0xB2,0x00,0x00,0x78,0x04,0x07,0x3F,0x40);
+	Delay (2);
+	////#B2 Set Display 
+	MIPI_SPI_Write(3,0xC0,0x43,0x17);					 /////1-->0x82		  1+2 dot inversion
+	////#                    1    2    3    4    5    6    7    8  
+	Delay (2);
+//////#B4 set display waveform cycle
+	MIPI_SPI_Write(32,0xB4,0x80,0x08,0x00,0x32,0x10,0x00,0x32,0x13,0xC7,0x00,0x00,0x00,0x35,0x00,0x40,0x04,0x37,0x0A,0x40,0x1E,0x52,0x52,0x0A,0x0A,0x40,0x0A,0x40,0x14,0x46,0x50,0x0A);					 /////1-->0x82		  1+2 dot inversion
+	////#                    1    2    3    4    5    6    7    8  
+	Delay (2);	
+//////#B6 set vcom voltage				  0x00												0x04
+//	#Set panel(02 FORWARD,0E BACKWARD)
+	MIPI_SPI_Write(2,0xCC,0x0E);				 
+	Delay (2);
+	//GIP(EQ)
+	MIPI_SPI_Write(49,0xD5,0x80,0x01,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x60,0x88,0x88,0x99,0x88,0x01,0x45,0x88,0x88,0x01,0x45,0x23,0x67,0x88,0x88,0x88,0x88,0x88,0x88,0x88,0x88,0x88,0x88,0x99,0x54,0x10,0x88,0x88,0x76,0x32,0x54,0x10,0x88,0x88,0x88,0x88,0x88,0x88,0x88);
+	Delay (2);	
+	////#BF Set OSC
+	MIPI_SPI_Write(3,0xCB,0x07,0x07);
+	Delay (2);	
+	////#D3 GAMMA
+	MIPI_SPI_Write(35,0xE0,0x00,0x10,0x18,0x3A,0x3D,0x3F,0x26,0x46,0x07,0x0C,0x0E,0x12,0x14,0x12,0x13,0x11,0x18,0x00,0x10,0x18,0x3A,0x3D,0x3F,0x26,0x46,0x07,0x0C,0x0E,0x12,0x14,0x12,0x13,0x11,0x18);
+	////#                    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   35
+	Delay (2);	
+	MIPI_SPI_Write(126,0xC1,0x00,0x08,0x10,0x1A,0x21,0x29,0x31,0x37,0x3F,0x47,0x50,0x58,0x60,0x68,0x70,0x78,0x81,0x88,0x90,0x99,0xA0, 0xA7,0xAF,0xB7,0xC0,0xC9,0xCE,0xD6,0xE0,0xE7,0xF1,0xF8,0xFF,0xFB,0x63,0xA1,0x2A,0x7D,0x69,0x8E,0x80,0x00,0x00,0x08,0x10,0x1A,0x21,0x29,0x31,0x37,0x3F,0x47,0x50,0x58,0x60,0x68,0x70,0x78,0x81,0x88,0x90,0x99,0xA0,0xA7,0xAF,0xB7,0xC0,0xC9,0xCE,0xD6,0xE0,0xE7,0xF1,0xF8,0xFF,0xFB,0x63,0xA1,0x2A,0x7D,0x69,0x8E,0x80,0x00,0x00,0x08,0x10,0x1A,0x21,0x29,0x31,0x37,0x3F,0x47,0x50,0x58,0x60,0x68,0x70,0x78,0x81,0x88,0x90,0x99,0xA0,0xA7,0xAF,0xB7,0xC0,0xC9,0xCE,0xD6,0xE0,0xE7,0xF1,0xF8,0xFF,0xFB,0x63,0xA1,0x2A,0x7D,0x69,0x8E,0x80,0x00);
+	Delay (2);
+	//#Sleep out
+	MIPI_SPI_Write(1,0x35);
+  Delay (2);	
+	MIPI_SPI_Write(1,0x11);
+	DelayMs (250);	
+	//#Display On
+	MIPI_SPI_Write(1,0x29);
+	Delay (50);
 }
-void SSD2828_inition_lcd_Check(void)    //IC³õÊ¼»¯
+
+
+
+void Forward_scan(void)           //ÕýÉ¨
 {
-//#=========================================================
-//#  Main LDI Power ON Sequence
-//#=========================================================
-
-MIPI_SPI_Write( 2, 0xe0,0x00);
-
-//#//--- password  ----//
-MIPI_SPI_Write( 2, 0xe1,0x93);
-MIPI_SPI_Write( 2, 0xe2,0x65);
-MIPI_SPI_Write( 2, 0xe3,0xf8);
-MIPI_SPI_Write( 2, 0x80,0x03);  //#for ESD
-
-//#//--- page1  ----//
-MIPI_SPI_Write( 2, 0xe0,0x01);
-
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#
-//#//set vcom
-//MIPI_SPI_Write( 2, 0x00,0x00);
-//MIPI_SPI_Write( 2, 0x01,0xb7);   //#//0xb5(VCOM??)
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#
-
-//#mipi.write 0x37,0x08 //#(????????) 
-//#MIPI_SPI_Write( 2, 0x00,0x00  //#(IC register shift) 
-//#mipi.write 0x06,0x01  
-//#mipi.read 
-
-//#//set gamma power, vgmp,vgmn,vgsp,vgsn
-MIPI_SPI_Write( 2, 0x17,0x00);
-MIPI_SPI_Write( 2, 0x18,0xcf);    //#source 4.7v
-MIPI_SPI_Write( 2, 0x19,0x01);
-MIPI_SPI_Write( 2, 0x1a,0x00);
-MIPI_SPI_Write( 2, 0x1b,0xcf);  
-MIPI_SPI_Write( 2, 0x1c,0x01);
-
-//#//set gate power
-MIPI_SPI_Write( 2, 0x1f,0x3e);    //#VGH
-MIPI_SPI_Write( 2, 0x20,0x28);    //#VGL
-MIPI_SPI_Write( 2, 0x21,0x28);
-MIPI_SPI_Write( 2, 0x22,0x0e);
-
-MIPI_SPI_Write( 2, 0x24,0x08);  //#//0xC8, [7]:vgh_en=0,[6]:vgl_en=0,[5]:avdd_en=0,[4]:avee_en=0
-
-
-//#//set rgbcyc
-MIPI_SPI_Write( 2, 0x37,0x29);	//#//[5:4]enz[1:0]=10, [3]ss=1, [0]bgr=1
-MIPI_SPI_Write( 2, 0x38,0x05);	//#//jdt=101 zigzag inversion
-MIPI_SPI_Write( 2, 0x39,0x08);	//#//rgb_n_eq1, modify 20140806
-MIPI_SPI_Write( 2, 0x3a,0x12);	//#//rgb_n_eq2, modify 20140806
-MIPI_SPI_Write( 2, 0x3c,0x78);	//#//set eq3 for te_h
-MIPI_SPI_Write( 2, 0x3d,0xff);	//#//set chgen_on, modify 20140827 
-MIPI_SPI_Write( 2, 0x3e,0xff);	//#//set chgen_off, modify 20140827 
-MIPI_SPI_Write( 2, 0x3f,0xff);	//#//set chgen_off2, modify 20140827
-
-
-
-
-//#//set tcon
-MIPI_SPI_Write( 2, 0x40,0x06);	//#//rso=800 pixels
-MIPI_SPI_Write( 2, 0x41,0xa0);	//#//ln=640->1280 line
-MIPI_SPI_Write( 2, 0x43,0x15);	//#//vfp   21
-MIPI_SPI_Write( 2, 0x44,0x12);	//#//vbp    18
-MIPI_SPI_Write( 2, 0x45,0x50);	//#//hbp    80
-MIPI_SPI_Write( 2, 0x4b,0x04);
-
-//#//--- power voltage  ----//
-MIPI_SPI_Write( 2, 0x55,0x0f);	//#//dcdcm=1111, external pwoer ic
-MIPI_SPI_Write( 2, 0x56,0x01);
-MIPI_SPI_Write( 2, 0x57,0x89);
-MIPI_SPI_Write( 2, 0x58,0x0a);
-MIPI_SPI_Write( 2, 0x59,0x2a);	//#//vcl = -2.9v
-MIPI_SPI_Write( 2, 0x5a,0x31);	//#//vgh = 19v
-MIPI_SPI_Write( 2, 0x5b,0x15);	//#//vgl = -11v
-
-//#//--- gamma ++  ----//
-MIPI_SPI_Write( 2, 0x5d,0x7c);
-MIPI_SPI_Write( 2, 0x5e,0x50);
-MIPI_SPI_Write( 2, 0x5f,0x3b);
-MIPI_SPI_Write( 2, 0x60,0x2b);
-MIPI_SPI_Write( 2, 0x61,0x25);
-MIPI_SPI_Write( 2, 0x62,0x15);
-MIPI_SPI_Write( 2, 0x63,0x1a);
-MIPI_SPI_Write( 2, 0x64,0x04);
-MIPI_SPI_Write( 2, 0x65,0x1c);
-MIPI_SPI_Write( 2, 0x66,0x1a);
-MIPI_SPI_Write( 2, 0x67,0x19);
-MIPI_SPI_Write( 2, 0x68,0x36);
-MIPI_SPI_Write( 2, 0x69,0x27);
-MIPI_SPI_Write( 2, 0x6a,0x2f);
-MIPI_SPI_Write( 2, 0x6b,0x23);
-MIPI_SPI_Write( 2, 0x6c,0x21);
-MIPI_SPI_Write( 2, 0x6d,0x17);
-MIPI_SPI_Write( 2, 0x6e,0x05);
-MIPI_SPI_Write( 2, 0x6f,0x00);
-
-//#//--- gamma --  ----//
-MIPI_SPI_Write( 2, 0x70,0x7c);
-MIPI_SPI_Write( 2, 0x71,0x50);
-MIPI_SPI_Write( 2, 0x72,0x3b);
-MIPI_SPI_Write( 2, 0x73,0x2b);
-MIPI_SPI_Write( 2, 0x74,0x25);
-MIPI_SPI_Write( 2, 0x75,0x15);
-MIPI_SPI_Write( 2, 0x76,0x1a);
-MIPI_SPI_Write( 2, 0x77,0x04);
-MIPI_SPI_Write( 2, 0x78,0x1c);
-MIPI_SPI_Write( 2, 0x79,0x1a);
-MIPI_SPI_Write( 2, 0x7a,0x19);
-MIPI_SPI_Write( 2, 0x7b,0x36);
-MIPI_SPI_Write( 2, 0x7c,0x27);
-MIPI_SPI_Write( 2, 0x7d,0x2f);
-MIPI_SPI_Write( 2, 0x7e,0x23);
-MIPI_SPI_Write( 2, 0x7f,0x21);
-MIPI_SPI_Write( 2, 0x80,0x17);
-MIPI_SPI_Write( 2, 0x81,0x05);
-MIPI_SPI_Write( 2, 0x82,0x00);
-
-
-//#//page2, for gip
-MIPI_SPI_Write( 2, 0xe0,0x02);
-
-//#//gip_l pin mapping
-MIPI_SPI_Write( 2, 0x00,0x00);
-MIPI_SPI_Write( 2, 0x01,0x04);   
-MIPI_SPI_Write( 2, 0x02,0x08); 
-MIPI_SPI_Write( 2, 0x03,0x05); 
-MIPI_SPI_Write( 2, 0x04,0x09); 
-MIPI_SPI_Write( 2, 0x05,0x06); 
-MIPI_SPI_Write( 2, 0x06,0x0a); 
-MIPI_SPI_Write( 2, 0x07,0x07); 
-MIPI_SPI_Write( 2, 0x08,0x0b); 
-MIPI_SPI_Write( 2, 0x09,0x1f); 
-MIPI_SPI_Write( 2, 0x0a,0x1f); 
-MIPI_SPI_Write( 2, 0x0b,0x1f); 
-MIPI_SPI_Write( 2, 0x0c,0x1f); 
-MIPI_SPI_Write( 2, 0x0d,0x1f); 
-MIPI_SPI_Write( 2, 0x0e,0x1f); 
-MIPI_SPI_Write( 2, 0x0f,0x17); 
-MIPI_SPI_Write( 2, 0x10,0x37); 
-MIPI_SPI_Write( 2, 0x11,0x10); 
-MIPI_SPI_Write( 2, 0x12,0x1f); 
-MIPI_SPI_Write( 2, 0x13,0x1f); 
-MIPI_SPI_Write( 2, 0x14,0x1f); 
-MIPI_SPI_Write( 2, 0x15,0x1f); 
-
-//#//gip_r pin mapping
-MIPI_SPI_Write( 2, 0x16,0x00);
-MIPI_SPI_Write( 2, 0x17,0x04);   
-MIPI_SPI_Write( 2, 0x18,0x08); 
-MIPI_SPI_Write( 2, 0x19,0x05); 
-MIPI_SPI_Write( 2, 0x1a,0x09); 
-MIPI_SPI_Write( 2, 0x1b,0x06); 
-MIPI_SPI_Write( 2, 0x1c,0x0a); 
-MIPI_SPI_Write( 2, 0x1d,0x07); 
-MIPI_SPI_Write( 2, 0x1e,0x0b); 
-MIPI_SPI_Write( 2, 0x1f,0x1f); 
-MIPI_SPI_Write( 2, 0x20,0x1f); 
-MIPI_SPI_Write( 2, 0x21,0x1f); 
-MIPI_SPI_Write( 2, 0x22,0x1f); 
-MIPI_SPI_Write( 2, 0x23,0x1f); 
-MIPI_SPI_Write( 2, 0x24,0x1f); 
-MIPI_SPI_Write( 2, 0x25,0x17); 
-MIPI_SPI_Write( 2, 0x26,0x37); 
-MIPI_SPI_Write( 2, 0x27,0x10); 
-MIPI_SPI_Write( 2, 0x28,0x1f); 
-MIPI_SPI_Write( 2, 0x29,0x1f); 
-MIPI_SPI_Write( 2, 0x2a,0x1f); 
-MIPI_SPI_Write( 2, 0x2b,0x1f); 
-
-//#//gip timing  
-MIPI_SPI_Write( 2, 0x58,0x01); 
-MIPI_SPI_Write( 2, 0x59,0x00); 
-MIPI_SPI_Write( 2, 0x5a,0x00); 
-MIPI_SPI_Write( 2, 0x5b,0x00); 
-MIPI_SPI_Write( 2, 0x5c,0x0C); //#//stv_s0
-MIPI_SPI_Write( 2, 0x5d,0x60); 
-MIPI_SPI_Write( 2, 0x5e,0x00); 
-MIPI_SPI_Write( 2, 0x5f,0x00); 
-MIPI_SPI_Write( 2, 0x60,0x30); 
-MIPI_SPI_Write( 2, 0x61,0x00); 
-MIPI_SPI_Write( 2, 0x62,0x00); 
-MIPI_SPI_Write( 2, 0x63,0x03); //#//stv_on
-MIPI_SPI_Write( 2, 0x64,0x6a); //#//stv_off
-MIPI_SPI_Write( 2, 0x65,0x45); 
-MIPI_SPI_Write( 2, 0x66,0x14); //#// for G1280 1 line delay with RST
-MIPI_SPI_Write( 2, 0x67,0x73); 
-MIPI_SPI_Write( 2, 0x68,0x10); //#//ckv_s0
-MIPI_SPI_Write( 2, 0x69,0x06); //#//ckv_on
-MIPI_SPI_Write( 2, 0x6a,0x6a); //#//ckv_off
-MIPI_SPI_Write( 2, 0x6b,0x00); 
-MIPI_SPI_Write( 2, 0x6c,0x00); 
-MIPI_SPI_Write( 2, 0x6d,0x03); 
-MIPI_SPI_Write( 2, 0x6e,0x00); 
-MIPI_SPI_Write( 2, 0x6f,0x08); 
-MIPI_SPI_Write( 2, 0x70,0x00); 
-MIPI_SPI_Write( 2, 0x71,0x00); 
-MIPI_SPI_Write( 2, 0x72,0x06); 
-MIPI_SPI_Write( 2, 0x73,0x7b); 
-MIPI_SPI_Write( 2, 0x74,0x00); 
-MIPI_SPI_Write( 2, 0x75,0x80); 
-MIPI_SPI_Write( 2, 0x76,0x00); 
-MIPI_SPI_Write( 2, 0x77,0x05); 
-MIPI_SPI_Write( 2, 0x78,0x1b); //#//flm_off
-MIPI_SPI_Write( 2, 0x79,0x00); 
-MIPI_SPI_Write( 2, 0x7a,0x00); 
-MIPI_SPI_Write( 2, 0x7b,0x00); 
-MIPI_SPI_Write( 2, 0x7c,0x00); 
-MIPI_SPI_Write( 2, 0x7d,0x03); 
-MIPI_SPI_Write( 2, 0x7e,0x7b); 
-
-//#//page3
-MIPI_SPI_Write( 2, 0xe0,0x03);
-MIPI_SPI_Write( 2, 0x98,0x3e);	//#//from 2e to 3e, led on
-
-//#//page4  for ESD
-MIPI_SPI_Write( 2, 0xe0,0x04);
-MIPI_SPI_Write( 2, 0x09,0x10);  //#//sweep blanking source level=gnd
-MIPI_SPI_Write( 2, 0x2b,0x2b);
-MIPI_SPI_Write( 2, 0x2e,0x44);	
-
-//#Page0
-MIPI_SPI_Write( 2, 0xE0,0x00);
-MIPI_SPI_Write( 2, 0xE6,0x02);  //#for ESD
-MIPI_SPI_Write( 2, 0xE7,0x02);  //#for ESD
-
-                           
-//#SLP OUT                   
-MIPI_SPI_Write( 1, 0x11);      
-DelayMs( 120);                 
-
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#                           
-//MIPI_SPI_Write( 2, 0xE0,0x01); 
-//MIPI_SPI_Write( 2, 0x01,0xC5); //#???????VCOM 
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#Set__//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#
-
-//MIPI_SPI_Write( 2, 0xE0,0x00); 
-
-//#DISP ON
-MIPI_SPI_Write( 1, 0x29);  
-DelayMs	( 5);
-
-//#--- TE----//#
-MIPI_SPI_Write( 2, 0x35,0x00);
-//#MIPI_SPI_Write( 2, 0xB6,0x32,0x32);
-	
-	
+//    #FORWARD=02,BACKWARD=0E
+	SSD2828_ENTER_LP_mode();   	 Delay(5);
+	MIPI_SPI_Write(2,0xCC,0x02);
+	SSD2828_VIDEO_MODE_HS();	 Delay(5);	
 }
+void Backward_scan(void)          //·´É¨
+{
+//    #FORWARD=02,BACKWARD=0E
+	SSD2828_ENTER_LP_mode();   	 Delay(5);
+	MIPI_SPI_Write(2,0xCC,0x0E);
+	SSD2828_VIDEO_MODE_HS();	 Delay(5);
+		
+}	
+/*******************************************************************************
+* Function Name  : void MTP(void)
+* Description    : otp -> vcom     //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/  
+void MTP(void)
+{
+//    OTP_POWER_COTROL(ON);   Delay_ms(500);   
+  MIPI_SPI_Write(4,0xB9,0xFF,0x83,0x89);           
+	DelayMs(10);
+	MIPI_SPI_Write(5,0xB6,0x00,VCOMDC1,0x00,VCOMDC1);
+	DelayMs(10);
+//    INTER_POWER_SET
+	MIPI_SPI_Write(20,0xB1,0x00,0x00,0x07,0x43,0x50,0x05,0x11,0x74,0xF1,0x2a,0x34,0x26,0x26,0x42,0x01,0x3A,0xF5,0x20,0x80); 
+	DelayMs(200);
+//    INTER_POWER_COTROL ON
+	MIPI_SPI_Write(2,0xDE,0x85); 	
+	DelayMs(200);    
+  MIPI_SPI_Write(3,0xE9,0xAA,0x55);       
+	DelayMs(100);
+    
+  MIPI_SPI_Write(5,0xBB,0x00,0x00,0xCC,0x00);      DelayMs(200);
+  MIPI_SPI_Write(5,0xBB,0x00,0x00,0xCC,0x00);      DelayMs(200);
+  MIPI_SPI_Write(5,0xBB,0x00,0x00,0xCC,0x01);      DelayMs(200);
+
+  MIPI_SPI_Write(3,0xE9,0x00,0x00);             
+	DelayMs(120);
+ //   OTP_POWER_COTROL(OFF);
+	MIPI_SPI_Write(2,0xDE,0x05); 	
+	DelayMs(100);
+    
+}
+
+/*******************************************************************************
+* Function Name  : void MTP_ID(void)
+* Description    : otp -> ID       //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/  
+
+void MTP_ID(void)
+{
+    ///////open OTP_PWR power  7.5v
+       
+  MIPI_SPI_Write(4,0xB9,0xFF,0x83,0x89);           
+	DelayMs(10);
+    
+  MIPI_SPI_Write(0x04,0xC3,0x53,0x44,0x90);
+	DelayMs(10);
+//    INTER_POWER_SET
+	MIPI_SPI_Write(20,0xB1,0x00,0x00,0x07,0x43,0x50,0x05,0x11,0x74,0xF1,0x2a,0x34,0x26,0x26,0x42,0x01,0x3A,0xF5,0x20,0x80); 
+	DelayMs(200);
+	MIPI_SPI_Write(2,0xDE,0x85); 	
+	DelayMs(200);    
+  MIPI_SPI_Write(3,0xE9,0xAA,0x55);       
+	DelayMs(100);   
+    MIPI_SPI_Write(5,0xBB,0x00,0x00,0x7B,0x00);      DelayMs(120);
+    MIPI_SPI_Write(5,0xBB,0x00,0x00,0x7B,0x00);      DelayMs(120);
+    MIPI_SPI_Write(5,0xBB,0x00,0x00,0x7B,0x01);      DelayMs(120);
+ //   Delay(1000);
+   // Delay(1000);
+  MIPI_SPI_Write(3,0xE9,0x00,0x00);       
+	DelayMs(120);  
+    ///////close OTP_PWR power  7.5v
+//    OTP_POWER_COTROL(OFF);
+	MIPI_SPI_Write(2,0xDE,0x05); 	
+	DelayMs(100);
+    	
+}
+
+#endif;
+
+#ifdef HXD800x1280
+//////mipi video mode setting
+u16 value_HighSpeed = 480;
+u16 value_Lane_select = 2;
+   
+u16  VDP= 1280;      
+u16  VBP= 12 ;    //
+u16  VFP= 12 ;    //
+
+u16  HDP= 800;     
+u16  HBP= 88;     //	
+u16  HFP= 56;     //	
+
+u16	 HPW=5;  //Í¨³£²»ÐèÒªµ÷Õû
+u16	 VPW=5;  //Í¨³£²»ÐèÒªµ÷Õû
+/////////////CLAN050LQ  USE    inition/////
+u8 PIC_NUM=14;       //ëŠœy®‹Ãæ×ÜÊý
+u8 Flicker_OTP=3;    //OTP flicker ®‹Ãæ¾ŽÌ–
+u8 Flicker_OQC=2;    //QC flicker  ®‹Ãæ¾ŽÌ–
+//-------------------------------------------------------------------
+//vcom½×´ÎÉè¶¨·½Ê½
+void VCOM_set(u8 vcom)
+{;}   
+//IDÖµÉè¶¨·½Ê½
+void ID_set(void)
+{;}		
+void SSD2828_inition_lcd(void)    //IC³õÊ¼»¯
+{;}
 void Forward_scan(void)           //ÕýÉ¨
 {;}
 void Backward_scan(void)          //·´É¨
@@ -1732,269 +1395,7 @@ void Backward_scan(void)          //·´É¨
 * Return         : None
 *******************************************************************************/  
 void MTP(void)
-{	
-
-//#====================================================================
-//#OTP internal power Flow
-//#====================================================================
-MIPI_SPI_Write( 2, 0xE0,0x00);        
-MIPI_SPI_Write( 2, 0xE1,0x93);
-MIPI_SPI_Write( 2, 0xE2,0x65);
-MIPI_SPI_Write( 2, 0xE3,0xF8);
-
-MIPI_SPI_Write( 2, 0xE5,0x00);
-MIPI_SPI_Write( 1, 0x28); 
-DelayMs( 10);    
-MIPI_SPI_Write( 1, 0x10);             
-DelayMs( 140);
-
-MIPI_SPI_Write( 2, 0xE0,0x01);        
-MIPI_SPI_Write( 2, 0x1D,0x01);
-MIPI_SPI_Write( 2, 0x1E,0x03);
-MIPI_SPI_Write( 2, 0xEC,0x02);
-MIPI_SPI_Write( 2, 0xE0,0x00);        
-MIPI_SPI_Write( 1, 0x11);             
-DelayMs( 14);
-
-MIPI_SPI_Write( 2, 0xE0,0x01);        
-MIPI_SPI_Write( 2, 0x00,0x00); 
-
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#  
-MIPI_SPI_Write( 2, 0x01,VCOMDC1);        //#0xb5,??VCOM?
-//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#Set__//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#//#
-
-MIPI_SPI_Write( 2, 0xE0,0x00);       
-MIPI_SPI_Write( 2, 0x84,0x5A); 
-MIPI_SPI_Write( 2, 0x85,0xA5); 
-DelayMs( 120);
-MIPI_SPI_Write( 2, 0xEA,0x00); 
-DelayMs( 120);
-MIPI_SPI_Write( 2, 0xEB,0x26);        //#???O?27...
-DelayMs( 120);
-MIPI_SPI_Write( 2, 0xEC,0x01);        //#external 0x01
-
-DelayMs( 120);
-MIPI_SPI_Write( 2, 0xE0,0x00);       
-MIPI_SPI_Write( 2, 0x84,0x00); 
-MIPI_SPI_Write( 2, 0x85,0x00);
-
-DelayMs( 120	);
-	
-//	//#===============================================================================
-////#  Main LDI Power ON Sequence
-////#===============================================================================
-
-//MIPI_SPI_Write( 1, 0x11);                    
-//Delay(120);
-
-////#Set Program OTP Address and Data
-//MIPI_SPI_Write(4, 0xFF, 0x61, 0x36, 0x01); 
-
-////#Supply Extemal 7.5V to VPP
-////gpio.write 0x44
-//VOTP_ADJ_SET(775);			
-//VOTP_EN(1);
-//	
-//Delay(380);
-
-////#=============Vcom E0============
-//MIPI_SPI_Write( 2, 0xE0, VCOMDC1);        //ÕýÉ¨VCOM
-//MIPI_SPI_Write( 2, 0xE1, 0x05);        //·´É¨VCOM
-//MIPI_SPI_Write( 2, 0xE2, 0x00);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-//Delay(50);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-////#=========Internal VGH/VGL(4C)========
-//MIPI_SPI_Write( 2, 0xE0, 0x00 );  
-//MIPI_SPI_Write( 2, 0xE1, 0xF4);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-////#======GIP correction CLK Falling=======
-//MIPI_SPI_Write( 2, 0xE0, 0x05 );	  
-//MIPI_SPI_Write( 2, 0xE1, 0x42);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-////#======GIP correction CLK Rising======= 
-//MIPI_SPI_Write( 2, 0xE0, 0x1F);   
-//MIPI_SPI_Write( 2, 0xE1, 0x3E);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-////#=====page7, 17h=1Fh ======
-//MIPI_SPI_Write( 2, 0xE0, 0x1F); 
-//MIPI_SPI_Write( 2, 0xE1, 0x3F);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-
-////#======GIP correction STV Falling======= 
-//MIPI_SPI_Write( 2, 0xE0, 0x05);   
-//MIPI_SPI_Write( 2, 0xE1, 0x35);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-////#======GIP correction STV Rising=======
-//MIPI_SPI_Write( 2, 0xE0, 0x03 );  
-//MIPI_SPI_Write( 2, 0xE1, 0x32);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-////#======GIP correction RST Falling======
-//MIPI_SPI_Write( 2, 0xE0, 0x35 );  
-//MIPI_SPI_Write( 2, 0xE1, 0x36);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-////#======GIP correction RST Rising======
-//MIPI_SPI_Write( 2, 0xE0, 0x1F);   
-//MIPI_SPI_Write( 2, 0xE1, 0x33);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-////#======GIP STV width ======
-//MIPI_SPI_Write( 2, 0xE0, 0xEB);   
-//MIPI_SPI_Write( 2, 0xE1, 0x44);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4 ,0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-
-
-////#======GIP Rising(18)======
-//MIPI_SPI_Write( 2, 0xE0 ,0x05 );  
-//MIPI_SPI_Write( 2, 0xE1, 0x40);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4, 0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-//DelayMs(20);
-
-////#======GIP Rising(19)======
-//MIPI_SPI_Write( 2, 0xE0, 0x00 );  
-//MIPI_SPI_Write( 2, 0xE1, 0x41);
-//MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-////#Step 3 : Enable OTP Program Key
-//MIPI_SPI_Write( 2, 0xE3, 0x55);
-//MIPI_SPI_Write( 2, 0xE4 ,0xAA);
-//MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-////#sleep out
-//MIPI_SPI_Write( 1, 0x11);
-
-//DelayMs(20);
-////#Cut off 7.5V to VPP
-////gpio.write 0x04
-//VOTP_ADJ_SET(330);			  //¹Ø±ÕÍâ²¿OTPµçÑ¹
-//VOTP_EN(0);
-
-//DelayMs(100);
-
-////#Reset IC
-////gpio.write 0x00		
-////MDelay(10);					
-////gpio.write 0x04
-////MDelay(10);
-
-////#Power off 
-////board.power.off vio
-////board.power.off vdd
-////board.power.off led  	
-}
+{	;	}
 
 /*******************************************************************************
 * Function Name  : void MTP_ID(void)
@@ -2008,7 +1409,3010 @@ void MTP_ID(void)
 {	;	}	
 #endif
 
+#ifdef HD720x1280_OTM1284A
+//////mipi video mode setting
+u16 value_HighSpeed =425;
+u16 value_Lane_select = 4;
 
+u16  VDP= 1280;      
+u16  VBP= 14;    //
+u16  VFP= 16 ;    //
+
+u16  HDP= 720;     
+u16  HBP= 76;     //	
+u16  HFP= 76;     //	
+
+u16	 HPW=10;  //Í¨³£²»ÐèÒªµ÷Õû
+
+u16	 VPW=4;  //Í¨³£²»ÐèÒªµ÷Õû
+	
+/////////////CLAN050LQ  USE    inition/////
+u8 PIC_NUM=16;       //ëŠœy®‹Ãæ×ÜÊý
+u8 Flicker_OTP=1;    //OTP flicker ®‹Ãæ¾ŽÌ–
+u8 Flicker_OQC=1;    //QC flicker  ®‹Ãæ¾ŽÌ–
+//-------------------------------------------------------------------
+//vcom½×´ÎÉè¶¨·½Ê½
+void VCOM_set(u8 vcom)
+{
+//# Command 2 Enable(step-1)
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(4,0xff,0x12,0x84,0x01);
+	Delay(2);
+//# Command 2 Enable(step-2)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(3,0xff,0x12,0x84);
+	Delay(2);
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xD9,vcom);
+}   
+//IDÖµÉè¶¨·½Ê½
+void ID_set(void)
+{
+////# Command 2 Enable(step-1)
+//	MIPI_SPI_Write(2,0x00,0x00);
+//	MIPI_SPI_Write(4,0xff,0x12,0x84,0x01);
+//	Delay(2);
+////# Command 2 Enable(step-2)
+//	MIPI_SPI_Write(2,0x00,0x80);
+//	MIPI_SPI_Write(3,0xff,0x12,0x84);
+//	Delay(2);
+////# ID1
+//	MIPI_SPI_Write(2,0x00,0x00);
+//	MIPI_SPI_Write(2,0xD0,0xC0); 
+////# ID2,ID3
+//	MIPI_SPI_Write(2,0x00,0x00);
+//	MIPI_SPI_Write(3,0xD1,0x00,0x00); 
+}		
+void SSD2828_inition_lcd(void)    //IC³õÊ¼»¯
+{
+//	# Command 2 Enable(step-1)
+	 MIPI_SPI_Write(2,0x00,0x00);
+   MIPI_SPI_Write(4,0xFF,0x12,0x84,0x01);
+//	# Command 2 Enable(step-2)
+	 MIPI_SPI_Write(2,0x00,0x80);
+	 MIPI_SPI_Write(3,0xFF,0x12,0x84);
+//  #BW scan=03h/FW scan=00h	
+	 MIPI_SPI_Write(2,0x00,0x00);
+	 MIPI_SPI_Write(2,0x36,0x00);    //¸ÃÐÍºÅÊ¹ÓÃÕýÉ¨
+	
+	 MIPI_SPI_Write(2,0x00,0x92);
+	 MIPI_SPI_Write(3,0xFF,0x30,0x02);	
+	
+	 MIPI_SPI_Write(2,0x00,0xB9);////-
+	 MIPI_SPI_Write(2,0xB0,0x11);	////-
+	
+//#================= Panel Setting =================
+//# TCON Setting Parameter
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(10,0xC0,0x00,0x64,0x00,0x10,0x10,0x00,0x64,0x10,0x10);
+         
+//# Panel Timing Setting Parameter
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(7,0xC0,0x00,0x55,0x00,0x01,0x00,0x04);
+     
+//# Source pre.     p.123    
+	MIPI_SPI_Write(2,0x00,0xA4);
+	MIPI_SPI_Write(2,0xC0,0x22);        
+
+//# Interval Scan Frame Setting (Column Inversion)
+	MIPI_SPI_Write(2,0x00,0xB3);
+	MIPI_SPI_Write(3,0xC0,0x00,0x55);     //# 55 Column/05 1dot/ 15 1+2dot/ D5 4dot   
+
+
+//# Oscillator Adjustment for ldle/Normal Mode
+	MIPI_SPI_Write(2,0x00,0x81);       //      # frame rate:60Hz
+	MIPI_SPI_Write(2,0xC1,0x55);
+
+//#-================= Power Setting =================
+//# DC2DC Setting
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xC4,0x05,0x10,0x06,0x02,0x05,0x15,0x10,0x05,0x10,0x07,0x02,0x05,0x15,0x10);
+								
+//# Power Control Setting
+//# BOOSTCLP (C4B0~C4B1h): VSP/VSN voltage setting 
+	MIPI_SPI_Write(2,0x00,0xB0);            // # VSP= 5.6V
+	MIPI_SPI_Write(3,0xC4,0x00,0x00);        //# VSN= -5.6V
+
+//# Power Control Setting
+//# HVSET (C591~C593h): VGH/VGL voltage setting    p.130  
+	MIPI_SPI_Write(2,0x00,0x91);            // # VGH= 15V / VGL= -10V
+	MIPI_SPI_Write(3,0xC5,0x46,0x42);       // # Pump Ratio: VGH=6x, VGL=-5x     46 42  -10, 49 52 -12, 4E 62 -15
+
+
+//# GVDDSET (D800h): GVDD/NGVDD Voltage setting   
+	MIPI_SPI_Write(2,0x00,0x00);           //  # GVDD= 4.8V
+	MIPI_SPI_Write(3,0xD8,0xB6,0xB6);       // # NGVDD= -4.8V
+
+////######################################################	
+//# VCOMDC (D900h): Voltage setting 
+//	MIPI_SPI_Write(2,0x00,0x00);
+//	MIPI_SPI_Write(2,0xD9,0x5B);
+//####################Set___############################
+//######################################################
+
+//#Source Blanking Setting
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(2,0xC4,0x00);     
+
+//# Source Bbias 1uA   p.129   
+	MIPI_SPI_Write(2,0x00,0x81);
+	MIPI_SPI_Write(2,0xC4,0x84);            
+// 
+
+//# VDD_18V/LVDSVDD Voltage setting
+	MIPI_SPI_Write(2,0x00,0xB2);             // # VDD_18V=1.7V, LVDSVDD=1.6V
+	MIPI_SPI_Write(3,0xC5,0xC0,0x84);    
+
+//# LVD voltage level setting    
+	MIPI_SPI_Write(2,0x00,0xBB);       
+	MIPI_SPI_Write(2,0xC5,0x8A); 
+
+//# Power Control Setting (Chopper)   
+	MIPI_SPI_Write(2,0x00,0x82);       
+	MIPI_SPI_Write(2,0xC4,0x0A); 
+
+//# Power Control Setting (Debounce)
+	MIPI_SPI_Write(2,0x00,0xC6);
+	MIPI_SPI_Write(2,0xB0,0x03);
+
+//# Precharge Disable
+	MIPI_SPI_Write(2,0x00,0xC2);
+	MIPI_SPI_Write(2,0xF5,0x40);
+
+//# Sample Hold GVDD
+	MIPI_SPI_Write(2,0x00,0xC3);
+	MIPI_SPI_Write(2,0xF5,0x85);     
+
+//# EN OP
+	MIPI_SPI_Write(2,0x00,0x87);
+	MIPI_SPI_Write(2,0xC4,0x18);  
+
+	
+//#================= Power IC =================
+//# Power IC Setting1 (Mode 3)   
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(5,0xF5,0x02,0x11,0x02,0x15);
+
+//# Power IC Setting2      
+	MIPI_SPI_Write(2,0x00,0x90);           //   # 2xVPNL
+	MIPI_SPI_Write(2,0xC5,0x50);
+//             
+//# Power IC Setting3 (Freq.)  Pump Clock  Setting  P.133
+	MIPI_SPI_Write(2,0x00,0x94);
+	MIPI_SPI_Write(2,0xC5,0x66);            //  # ??66->1/8 Lines
+
+//#================= VGLO1/O2 Disable =================
+//# VGLO1 setting        
+	MIPI_SPI_Write(2,0x00,0xB2);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//              
+//# VGLO1_s setting   
+	MIPI_SPI_Write(2,0x00,0xB4);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//               
+//# VGLO2 setting    
+	MIPI_SPI_Write(2,0x00,0xB6);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//             
+//# VGLO2_s setting 
+	MIPI_SPI_Write(2,0x00,0xB8);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//             
+//# VCL pump dis
+	MIPI_SPI_Write(2,0x00,0x94);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//            
+//# VCL reg. en  
+	MIPI_SPI_Write(2,0x00,0xD2);
+	MIPI_SPI_Write(3,0xF5,0x06,0x15);
+//               
+//# VGLO1/2 Pull low setting   #d[7] vglo1 d[6] vglo2 => 0: pull vss, 1: pull vgl
+  MIPI_SPI_Write(2,0x00,0xB4);
+	MIPI_SPI_Write(2,0xC5,0xCC);   
+
+
+//--------------2015.3.6-----------------
+
+//################### Thermo Setting ######################### 
+
+//#Temp. Enable 
+  MIPI_SPI_Write(2,0x00,0xC0);      
+  MIPI_SPI_Write(2,0xc5,0x11); 
+
+//#Enable Temp. Detect     
+  MIPI_SPI_Write(2,0x00,0xC2);       
+  MIPI_SPI_Write(2,0xc5,0x05);      
+
+//#F=LT VGH clamp, 4=HT VGH clamp(X)     
+  MIPI_SPI_Write(2,0x00,0xC3);     
+  MIPI_SPI_Write(2,0xc5,0xB4);       
+
+//#HT VGH-8stage / LT VGH+8stage      
+  MIPI_SPI_Write(2,0x00,0xC4);       
+  MIPI_SPI_Write(2,0xc5,0x07); 
+              
+
+//#High Temp. Detec 0xXX + 25= XXC
+//#0xFF-0x37= clamp      
+  MIPI_SPI_Write(2,0x00,0xC9);       
+  MIPI_SPI_Write(2,0xc5,0xC8); 
+
+//#Low Temp. Detec 25-0x23= -10C 
+//#25-0x0A= 25C-10C-5C   
+  MIPI_SPI_Write(2,0x00,0xCA);       
+  MIPI_SPI_Write(2,0xc5,0x0A);              
+
+//#D[7]=Enable VGH auto change pump ratio, D[6:5] setting VGH pump ratio     
+  MIPI_SPI_Write(2,0x00,0xCB);       
+  MIPI_SPI_Write(2,0xc5,0xF0); 
+
+
+
+//----------------------------------------
+//#================= Power IC =================
+////# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(12,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+	//              
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(16,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+	//               
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(16,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+	//               
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(16,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xC0);
+	MIPI_SPI_Write(16,0xCB,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x00,0x00,0x15,0x15,0x15,0x15,0x15);
+	// 
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xD0);
+	MIPI_SPI_Write(16,0xCB,0x15,0x15,0x15,0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15);
+
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xE0);
+	MIPI_SPI_Write(15,0xCB,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x00,0x00,0x00,0x00);
+
+	//#TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xF0);
+	MIPI_SPI_Write(12,0xCB,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF);
+
+//	#================= GOA Mapping =================
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(16,0xCC,0x06,0x2d,0x2e,0x2d,0x2d,0x10,0x0e,0x0c,0x00,0x00,0x0a,0x02,0x2d,0x2d,0x2d);
+
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(16,0xCC,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00,0x05,0x2d,0x2e,0x2d,0x2d,0x0f,0x0d,0x0b);
+//					 
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xCC,0x00,0x00,0x09,0x01,0x2d,0x2d,0x2d,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00);
+//		
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(16,0xCC,0x01,0x2e,0x2d,0x2d,0x2d,0x09,0x0b,0x0d,0x00,0x00,0x0f,0x05,0x2d,0x2d,0x2d);
+//										
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xC0);           
+	MIPI_SPI_Write(16,0xCC,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00,0x02,0x2e,0x2d,0x2d,0x2d,0x0a,0x0c,0x0e);
+//									
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xD0);
+	MIPI_SPI_Write(15,0xCC,0x00,0x00,0x10,0x06,0x2d,0x2d,0x2d,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00);
+//	
+//#================= GOA Timing =================
+//# TCON_GOA_WAVE(VST setting)
+//#TCON_GOA_WAVE(VST setting)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(13,0xCE,0x87,0x05,0x10,0x86,0x05,0x10,0x00,0x00,0x00,0x00,0x00,0x00);
+//                     
+//# TCON_GOA_WAVE(VEND stting)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(15,0xCE,0x34,0xff,0x10,0x35,0x00,0x10,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xCE,0x38,0x03,0x84,0xF8,0x89,0x16,0x00,0x38,0x02,0x84,0xF9,0x89,0x16,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(15,0xCE,0x38,0x01,0x84,0xFA,0x89,0x16,0x00,0x38,0x00,0x84,0xFB,0x89,0x16,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xC0);
+	MIPI_SPI_Write(15,0xCE,0x30,0x00,0x84,0xFC,0x89,0x16,0x00,0x30,0x01,0x84,0xFD,0x89,0x16,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xD0);
+	MIPI_SPI_Write(15,0xCE,0x30,0x02,0x84,0xFE,0x89,0x16,0x00,0x30,0x03,0x84,0xFF,0x89,0x16,0x00);
+		//                      
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//      
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//                    
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//                   
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//            
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE) 
+	MIPI_SPI_Write(2,0x00,0xC0);                              
+	MIPI_SPI_Write(12,0xCF,0x01,0x01,0x20,0x20,0x00,0x00,0x01,0x81,0x00,0x00,0x00);
+		//                                                           
+		//# TCON_GOA_OUT Setting
+	MIPI_SPI_Write(2,0x00,0xB5);
+	MIPI_SPI_Write(7,0xC5,0x3F,0xFF,0xFF,0x3F,0xFF,0xFF);
+		//               
+		//#================= Gamma 2.2 =================                
+		//# Gamma 2.2+
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(21,0xE1,0x00,0x15,0x23,0x32,0x42,0x52,0x55,0x83,0x74,0x8E,0x73,0x5D,0x6C,0x47,0x42,0x34,0x25,0x17,0x0B,0x03); 
+		//#=====================255==253==251==248==244==239==231==203==175==143==112===80===52===24===16===11====7====4====2====0
+		//# Gamma 2.2-
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(21,0xE2,0x00,0x15,0x23,0x32,0x42,0x52,0x55,0x83,0x74,0x8E,0x73,0x5D,0x6C,0x47,0x42,0x34,0x25,0x17,0x0B,0x03);
+	
+//#Time out off
+	MIPI_SPI_Write(2,0x00,0xA4);
+	MIPI_SPI_Write(2,0xC1,0xF0);
+
+//# Orise Mode Disable
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(4,0xFF,0xFF,0xFF,0xFF);
+
+	DelayMs(100);
+	MIPI_SPI_Write(1,0x11);	
+	DelayMs(200);
+	
+	MIPI_SPI_Write(1,0x29);	
+	DelayMs(100);
+	
+}
+
+void SSD2828_inition_lcd_Check(void)    //´ËÐÍºÅM¼ìÓëOTP³õÊ¼»¯·Ö¿ª
+{
+	//	# Command 2 Enable(step-1)
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(4,0xFF,0x12,0x84,0x01);
+	//	# Command 2 Enable(step-2)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(3,0xFF,0x12,0x84);
+	DelayMs(2);
+	
+//-------------2015.3.6-----------	
+	//Read VGH/VGL  
+	MIPI_SPI_Write(2,0x00,0x91);
+	MIPI_SPI_Write(2,0x37,0x02);
+	MIPI_SPI_Write(2,0x06,0xC5);  
+
+	//Read GVDD/NGVDD  
+	MIPI_SPI_Write(2,0x00,0x00);  
+	MIPI_SPI_Write(2,0x37,0x02);          
+	MIPI_SPI_Write(2,0x06,0xD8);
+
+	//Read VCOM
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0x37,0x01);
+	MIPI_SPI_Write(2,0x06,0xD9);
+
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0x37,0x14);
+	MIPI_SPI_Write(2,0x06,0xE1);
+
+	//Read Gamma-
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0x37,0x14);
+	MIPI_SPI_Write(2,0x06,0xE2);
+
+//-----------------------------------
+	
+	//#Time out off
+	MIPI_SPI_Write(2,0x00,0xA4);
+	MIPI_SPI_Write(2,0xC1,0xF0);
+  DelayMs(2);
+	//# Orise Mode Disable
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(4,0xFF,0xFF,0xFF,0xFF);
+
+	DelayMs(100);
+	MIPI_SPI_Write(1,0x11);	
+	DelayMs(200);
+
+	MIPI_SPI_Write(1,0x29);	
+	DelayMs(100);
+}
+
+void Forward_scan(void)           //ÕýÉ¨
+{
+//  #BW scan=03h/FW scan=00h	
+	 SSD2828_ENTER_LP_mode();   	 Delay(5);
+	 MIPI_SPI_Write(2,0x00,0x00);
+	 MIPI_SPI_Write(2,0x36,0x00);
+	 SSD2828_VIDEO_MODE_HS();	    Delay(5);
+}
+void Backward_scan(void)          //·´É¨
+{
+//  #BW scan=03h/FW scan=00h	
+	 SSD2828_ENTER_LP_mode();   	 Delay(5);
+	 MIPI_SPI_Write(2,0x00,0x00);
+	 MIPI_SPI_Write(2,0x36,0x03);
+	 SSD2828_VIDEO_MODE_HS();	    Delay(5);
+
+}	
+/*******************************************************************************
+* Function Name  : void MTP(void)
+* Description    : otp -> vcom     //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/  
+void MTP(void)
+{	
+//# Command 2 Enable(step-1)
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(4,0xff,0x12,0x84,0x01);
+	Delay(10);
+//# Command 2 Enable(step-2)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(3,0xff,0x12,0x84);
+	Delay(10);
+	MIPI_SPI_Write(1,0x11);
+	Delay(150);
+
+	
+//=======================ÉÕÈëËùÓÐ¼Ä´æÆ÷===========================
+//#================= Panel Setting =================
+//# TCON Setting Parameter
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(10,0xC0,0x00,0x64,0x00,0x10,0x10,0x00,0x64,0x10,0x10);
+         
+//# Panel Timing Setting Parameter
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(7,0xC0,0x00,0x55,0x00,0x01,0x00,0x04);
+     
+//# Source pre.     p.123    
+	MIPI_SPI_Write(2,0x00,0xA4);
+	MIPI_SPI_Write(2,0xC0,0x22);        
+
+//# Interval Scan Frame Setting (Column Inversion)
+	MIPI_SPI_Write(2,0x00,0xB3);
+	MIPI_SPI_Write(3,0xC0,0x00,0x55);     //# 55 Column/05 1dot/ 15 1+2dot/ D5 4dot   
+
+
+//# Oscillator Adjustment for ldle/Normal Mode
+	MIPI_SPI_Write(2,0x00,0x81);       //      # frame rate:60Hz
+	MIPI_SPI_Write(2,0xC1,0x55);
+  Delay(10);	
+//#-================= Power Setting =================
+//# DC2DC Setting
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xC4,0x05,0x10,0x06,0x02,0x05,0x15,0x10,0x05,0x10,0x07,0x02,0x05,0x15,0x10);
+								
+//# Power Control Setting
+//# BOOSTCLP (C4B0~C4B1h): VSP/VSN voltage setting 
+	MIPI_SPI_Write(2,0x00,0xB0);            // # VSP= 5.6V
+	MIPI_SPI_Write(3,0xC4,0x00,0x00);        //# VSN= -5.6V
+
+//# Power Control Setting
+//# HVSET (C591~C593h): VGH/VGL voltage setting    p.130  
+	MIPI_SPI_Write(2,0x00,0x91);            // # VGH= 15V / VGL= -10V
+	MIPI_SPI_Write(3,0xC5,0x46,0x42);       // # Pump Ratio: VGH=6x, VGL=-5x     46 42  -10, 49 52 -12, 4E 62 -15
+
+
+//# GVDDSET (D800h): GVDD/NGVDD Voltage setting   
+	MIPI_SPI_Write(2,0x00,0x00);           //  # GVDD= 4.8V
+	MIPI_SPI_Write(3,0xD8,0xB6,0xB6);       // # NGVDD= -4.8V
+  Delay(10);	
+//==============set vcom======================		
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xD9,VCOMDC1);
+	Delay(10);
+
+//#Source Blanking Setting
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(2,0xC4,0x00);     
+
+//# Source Bbias 1uA   p.129   
+	MIPI_SPI_Write(2,0x00,0x81);
+	MIPI_SPI_Write(2,0xC4,0x84);            
+// 
+
+//# VDD_18V/LVDSVDD Voltage setting
+	MIPI_SPI_Write(2,0x00,0xB2);             // # VDD_18V=1.7V, LVDSVDD=1.6V
+	MIPI_SPI_Write(3,0xC5,0x00,0x84);    
+
+//# LVD voltage level setting    
+	MIPI_SPI_Write(2,0x00,0xBB);       
+	MIPI_SPI_Write(2,0xC5,0x8A); 
+
+//# Power Control Setting (Chopper)   
+	MIPI_SPI_Write(2,0x00,0x82);       
+	MIPI_SPI_Write(2,0xC4,0x0A); 
+
+//# Power Control Setting (Debounce)
+	MIPI_SPI_Write(2,0x00,0xC6);
+	MIPI_SPI_Write(2,0xB0,0x03);
+
+//# Precharge Disable
+	MIPI_SPI_Write(2,0x00,0xC2);
+	MIPI_SPI_Write(2,0xF5,0x40);
+
+//# Sample Hold GVDD
+	MIPI_SPI_Write(2,0x00,0xC3);
+	MIPI_SPI_Write(2,0xF5,0x85);     
+
+//# EN OP
+	MIPI_SPI_Write(2,0x00,0x87);
+	MIPI_SPI_Write(2,0xC4,0x18);  
+  Delay(50);	
+////==============set ID======================	
+	if(ID_OK==1)	//ÈôIDÒ»´ÎÎ´Ÿý		
+	{	
+//# ID1
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xD0,ID1_VALUE); 
+//	Delay(10);	
+//# ID2,ID3
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(3,0xD1,ID2_VALUE,ID3_VALUE); 
+	Delay(10);
+	}	
+//#================= Power IC =================
+//# Power IC Setting1 (Mode 3)   
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(5,0xF5,0x02,0x11,0x02,0x15);
+
+//# Power IC Setting2      
+	MIPI_SPI_Write(2,0x00,0x90);           //   # 2xVPNL
+	MIPI_SPI_Write(2,0xC5,0x50);
+//             
+//# Power IC Setting3 (Freq.)  Pump Clock  Setting  P.133
+	MIPI_SPI_Write(2,0x00,0x94);
+	MIPI_SPI_Write(2,0xC5,0x66);            //  # ??66->1/8 Lines
+  Delay(50);	
+//#================= VGLO1/O2 Disable =================
+//# VGLO1 setting        
+	MIPI_SPI_Write(2,0x00,0xB2);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//              
+//# VGLO1_s setting   
+	MIPI_SPI_Write(2,0x00,0xB4);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//               
+//# VGLO2 setting    
+	MIPI_SPI_Write(2,0x00,0xB6);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//             
+//# VGLO2_s setting 
+	MIPI_SPI_Write(2,0x00,0xB8);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//             
+//# VCL pump dis
+	MIPI_SPI_Write(2,0x00,0x94);
+	MIPI_SPI_Write(3,0xF5,0x00,0x00);
+//            
+//# VCL reg. en  
+	MIPI_SPI_Write(2,0x00,0xD2);
+	MIPI_SPI_Write(3,0xF5,0x06,0x15);
+//               
+//# VGLO1/2 Pull low setting   #d[7] vglo1 d[6] vglo2 => 0: pull vss, 1: pull vgl
+  MIPI_SPI_Write(2,0x00,0xB4);
+	MIPI_SPI_Write(2,0xC5,0xCC);   
+  Delay(50);	
+	
+	
+	//--------------2015.3.6-----------------
+
+//################### Thermo Setting ######################### 
+
+//#Temp. Enable 
+  MIPI_SPI_Write(2,0x00,0xC0);      
+  MIPI_SPI_Write(2,0xc5,0x11); 
+
+//#Enable Temp. Detect     
+  MIPI_SPI_Write(2,0x00,0xC2);       
+  MIPI_SPI_Write(2,0xc5,0x05);      
+
+//#F=LT VGH clamp, 4=HT VGH clamp(X)     
+  MIPI_SPI_Write(2,0x00,0xC3);     
+  MIPI_SPI_Write(2,0xc5,0xB4);       
+
+//#HT VGH-8stage / LT VGH+8stage      
+  MIPI_SPI_Write(2,0x00,0xC4);       
+  MIPI_SPI_Write(2,0xc5,0x07); 
+              
+
+//#High Temp. Detec 0xXX + 25= XXC
+//#0xFF-0x37= clamp      
+  MIPI_SPI_Write(2,0x00,0xC9);       
+  MIPI_SPI_Write(2,0xc5,0xC8); 
+
+//#Low Temp. Detec 25-0x23= -10C 
+//#25-0x0A= 25C-10C-5C   
+  MIPI_SPI_Write(2,0x00,0xCA);       
+  MIPI_SPI_Write(2,0xc5,0x0A);              
+
+//#D[7]=Enable VGH auto change pump ratio, D[6:5] setting VGH pump ratio     
+  MIPI_SPI_Write(2,0x00,0xCB);       
+  MIPI_SPI_Write(2,0xc5,0xF0); 
+	
+//#================= Power IC =================
+////# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(12,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+	//              
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(16,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+	//               
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(16,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+	//               
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(16,0xCB,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xC0);
+	MIPI_SPI_Write(16,0xCB,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x00,0x00,0x15,0x15,0x15,0x15,0x15);
+	// 
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xD0);
+	MIPI_SPI_Write(16,0xCB,0x15,0x15,0x15,0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15);
+
+	//# TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xE0);
+	MIPI_SPI_Write(15,0xCB,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x00,0x00,0x00,0x00);
+
+	//#TCON_GOA_WAVE(Panel timing state control)
+	MIPI_SPI_Write(2,0x00,0xF0);
+	MIPI_SPI_Write(12,0xCB,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF);
+  Delay(50);	
+//	#================= GOA Mapping =================
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(16,0xCC,0x06,0x2d,0x2e,0x2d,0x2d,0x10,0x0e,0x0c,0x00,0x00,0x0a,0x02,0x2d,0x2d,0x2d);
+
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(16,0xCC,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00,0x05,0x2d,0x2e,0x2d,0x2d,0x0f,0x0d,0x0b);
+//					 
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xCC,0x00,0x00,0x09,0x01,0x2d,0x2d,0x2d,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00);
+//		
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(16,0xCC,0x01,0x2e,0x2d,0x2d,0x2d,0x09,0x0b,0x0d,0x00,0x00,0x0f,0x05,0x2d,0x2d,0x2d);
+//										
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xC0);           
+	MIPI_SPI_Write(16,0xCC,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00,0x02,0x2e,0x2d,0x2d,0x2d,0x0a,0x0c,0x0e);
+//									
+//	# TCON_GOA_WAVE(Panel pad mapping control)
+	MIPI_SPI_Write(2,0x00,0xD0);
+	MIPI_SPI_Write(15,0xCC,0x00,0x00,0x10,0x06,0x2d,0x2d,0x2d,0x2e,0x2e,0x2e,0x00,0x00,0x00,0x00);
+  Delay(50);		
+//#================= GOA Timing =================
+//# TCON_GOA_WAVE(VST setting)
+//#TCON_GOA_WAVE(VST setting)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(13,0xCE,0x87,0x05,0x10,0x86,0x05,0x10,0x00,0x00,0x00,0x00,0x00,0x00);
+//                     
+//# TCON_GOA_WAVE(VEND stting)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(15,0xCE,0x34,0xff,0x10,0x35,0x00,0x10,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xCE,0x38,0x03,0x84,0xF8,0x89,0x16,0x00,0x38,0x02,0x84,0xF9,0x89,0x16,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(15,0xCE,0x38,0x01,0x84,0xFA,0x89,0x16,0x00,0x38,0x00,0x84,0xFB,0x89,0x16,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xC0);
+	MIPI_SPI_Write(15,0xCE,0x30,0x00,0x84,0xFC,0x89,0x16,0x00,0x30,0x01,0x84,0xFD,0x89,0x16,0x00);
+		//                     
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xD0);
+	MIPI_SPI_Write(15,0xCE,0x30,0x02,0x84,0xFE,0x89,0x16,0x00,0x30,0x03,0x84,0xFF,0x89,0x16,0x00);
+		//                      
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//      
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0x90);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//                    
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xA0);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//                   
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE)
+	MIPI_SPI_Write(2,0x00,0xB0);
+	MIPI_SPI_Write(15,0xCF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		//            
+		//# TCON_GOA_WAVE(TCON_GOA_WAVE) 
+	MIPI_SPI_Write(2,0x00,0xC0);                              
+	MIPI_SPI_Write(12,0xCF,0x01,0x01,0x20,0x20,0x00,0x00,0x01,0x81,0x00,0x00,0x00);
+		//                                                           
+		//# TCON_GOA_OUT Setting
+	MIPI_SPI_Write(2,0x00,0xB5);
+	MIPI_SPI_Write(7,0xC5,0x3F,0xFF,0xFF,0x3F,0xFF,0xFF);
+  Delay(50);	              
+		//#================= Gamma 2.2 =================                
+		//# Gamma 2.2+
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(21,0xE1,0x00,0x15,0x23,0x32,0x42,0x52,0x55,0x83,0x74,0x8E,0x73,0x5D,0x6C,0x47,0x42,0x34,0x25,0x17,0x0B,0x03); 
+		//#=====================255==253==251==248==244==239==231==203==175==143==112===80===52===24===16===11====7====4====2====0
+		//# Gamma 2.2-
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(21,0xE2,0x00,0x15,0x23,0x32,0x42,0x52,0x55,0x83,0x74,0x8E,0x73,0x5D,0x6C,0x47,0x42,0x34,0x25,0x17,0x0B,0x03);
+		
+  Delay(50);	
+
+	MIPI_SPI_Write(1,0x10);
+	Delay(250);	
+	
+	VOTP_ADJ_SET(750);			
+	VOTP_EN(1);					  
+//¿ªÆôÍâ²¿7.5VµçÑ¹
+	Delay(250);		
+//#Enable FF92/FF93 SW lane select
+//#EB00h=01h -> 81h
+//#Turn on External NVM write power(7.5V)
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xEB,0x81);
+  DelayMs(1200);
+
+//#END NVM Program
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xEB,0x00);
+//¹Ø±ÕÍâ²¿7.5VµçÑ¹
+	VOTP_EN(0);	
+	VOTP_ADJ_SET(300);	
+  Delay(100);	  	
+//#Remove NVM power(7.5V)
+
+//# Orise Mode Disable
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(4,0xFF,0xFF,0xFF,0xFF);
+}
+
+/*******************************************************************************
+* Function Name  : void MTP_ID(void)
+* Description    : otp -> ID       //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/  
+
+void MTP_ID(void)
+{	
+//# Command 2 Enable(step-1)
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(4,0xff,0x12,0x84,0x01);
+	Delay(10);
+//# Command 2 Enable(step-2)
+	MIPI_SPI_Write(2,0x00,0x80);
+	MIPI_SPI_Write(3,0xff,0x12,0x84);
+	Delay(10);
+	MIPI_SPI_Write(1,0x11);
+	Delay(150);
+	
+	MIPI_SPI_Write(2,0x00,0x00);
+
+//# ID1
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xD0,ID1_VALUE); 
+//# ID2,ID3
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(3,0xD1,ID2_VALUE,ID3_VALUE); 
+	Delay(10);
+	MIPI_SPI_Write(1,0x10);
+	Delay(200);	
+	
+	VOTP_ADJ_SET(750);			
+	VOTP_EN(1);					  
+//¿ªÆôÍâ²¿7.5VµçÑ¹
+	Delay(250);		
+//#??Enable FF92/FF93 SW lane select
+//#EB00h=01h -> 81h
+//#Turn on External NVM write power(7.5V)
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xEB,0x81);
+  DelayMs(1000);
+
+//#END NVM Program
+	MIPI_SPI_Write(2,0x00,0x00);
+	MIPI_SPI_Write(2,0xEB,0x00);
+//¹Ø±ÕÍâ²¿7.5VµçÑ¹
+	VOTP_EN(0);	
+	VOTP_ADJ_SET(300);	
+  Delay(100);	  	
+//#Remove NVM power(7.5V)
+}
+	
+#endif
+
+
+#ifdef HD720x1280_ILI9881C
+
+u16 value_HighSpeed =450;
+u16 value_Lane_select = 4;
+
+u16  VDP= 1280;      
+u16  VBP= 14;    //
+u16  VFP= 16 ;    //
+
+u16  HDP= 720;     
+u16  HBP= 76;     //	
+u16  HFP= 76;     //	
+
+u16	 HPW=10;  //Í¨³£²»ÐèÒªµ÷Õû
+
+u16	 VPW=4;  //Í¨³£²»ÐèÒªµ÷Õû
+	
+/////////////CLAN050LQ  USE    inition/////
+u8 PIC_NUM=18;       //ëŠœy®‹Ãæ×ÜÊý
+u8 Flicker_OTP=6;    //OTP flicker ®‹Ãæ¾ŽÌ–
+u8 Flicker_OQC=6;    //QC flicker  ®‹Ãæ¾ŽÌ–
+//-------------------------------------------------------------------
+//vcom½×´ÎÉè¶¨·½Ê½
+void VCOM_set(u8 vcom)
+{
+	  MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x01);  //page1
+	  MIPI_SPI_Write( 2, 0x56, 0x00);	
+		MIPI_SPI_Write( 2, 0x53, vcom);		           //#VCOM1
+}   
+//IDÖµÉè¶¨·½Ê½
+void ID_set(void)
+{
+		////# Command 2 Enable(step-1)
+		//	MIPI_SPI_Write(2,0x00,0x00);
+		//	MIPI_SPI_Write(4,0xff,0x12,0x84,0x01);
+		//	Delay(2);
+		////# Command 2 Enable(step-2)
+		//	MIPI_SPI_Write(2,0x00,0x80);
+		//	MIPI_SPI_Write(3,0xff,0x12,0x84);
+		//	Delay(2);
+		////# ID1
+		//	MIPI_SPI_Write(2,0x00,0x00);
+		//	MIPI_SPI_Write(2,0xD0,0xC0); 
+		////# ID2,ID3
+		//	MIPI_SPI_Write(2,0x00,0x00);
+		//	MIPI_SPI_Write(3,0xD1,0x00,0x00); 
+}		
+void SSD2828_inition_lcd(void)    //IC³õÊ¼»¯
+{
+//#===========================================================================
+//#  Main LDI Power ON Sequence
+//#===========================================================================
+
+
+MIPI_SPI_Write( 4, 0xFF, 0x98 ,0x81 ,0x03);
+
+//#gip_1
+
+MIPI_SPI_Write( 2,0x01,0x00);
+MIPI_SPI_Write( 2,0x02,0x00);
+MIPI_SPI_Write( 2,0x03,0x55);
+MIPI_SPI_Write( 2,0x04,0x13);
+MIPI_SPI_Write( 2,0x05,0x00);
+MIPI_SPI_Write( 2,0x06,0x06);
+MIPI_SPI_Write( 2,0x07,0x01);
+MIPI_SPI_Write( 2,0x08,0x00);
+MIPI_SPI_Write( 2,0x09,0x01);
+MIPI_SPI_Write( 2,0x0a,0x01);
+MIPI_SPI_Write( 2,0x0b,0x00);
+MIPI_SPI_Write( 2,0x0c,0x00);
+MIPI_SPI_Write( 2,0x0d,0x00);
+MIPI_SPI_Write( 2,0x0e,0x00);
+MIPI_SPI_Write( 2,0x0f,0x19);
+MIPI_SPI_Write( 2,0x10,0x19); 
+MIPI_SPI_Write( 2,0x11,0x00);
+MIPI_SPI_Write( 2,0x12,0x00);
+MIPI_SPI_Write( 2,0x13,0x00);
+MIPI_SPI_Write( 2,0x14,0x00);
+MIPI_SPI_Write( 2,0x15,0x00);
+MIPI_SPI_Write( 2,0x16,0x00); 
+MIPI_SPI_Write( 2,0x17,0x00); 
+MIPI_SPI_Write( 2,0x18,0x00);
+MIPI_SPI_Write( 2,0x19,0x00);
+MIPI_SPI_Write( 2,0x1a,0x00);
+MIPI_SPI_Write( 2,0x1b,0x00);
+MIPI_SPI_Write( 2,0x1c,0x00);
+MIPI_SPI_Write( 2,0x1d,0x00);
+MIPI_SPI_Write( 2,0x1e,0x44);
+MIPI_SPI_Write( 2,0x1f,0x00);   
+MIPI_SPI_Write( 2,0x20,0x02);
+MIPI_SPI_Write( 2,0x21,0x03);
+MIPI_SPI_Write( 2,0x22,0x00);  
+MIPI_SPI_Write( 2,0x23,0x00);
+MIPI_SPI_Write( 2,0x24,0x00); 
+MIPI_SPI_Write( 2,0x25,0x00); 
+MIPI_SPI_Write( 2,0x26,0x00);
+MIPI_SPI_Write( 2,0x27,0x00);
+MIPI_SPI_Write( 2,0x28,0x33); 
+MIPI_SPI_Write( 2,0x29,0x03);
+MIPI_SPI_Write( 2,0x2a,0x00);
+MIPI_SPI_Write( 2,0x2b,0x00);
+MIPI_SPI_Write( 2,0x2c,0x00);
+MIPI_SPI_Write( 2,0x2d,0x00);
+MIPI_SPI_Write( 2,0x2e,0x00);
+MIPI_SPI_Write( 2,0x2f,0x00);
+MIPI_SPI_Write( 2,0x30,0x00);
+MIPI_SPI_Write( 2,0x31,0x00);
+MIPI_SPI_Write( 2,0x32,0x00);
+MIPI_SPI_Write( 2,0x33,0x00);
+MIPI_SPI_Write( 2,0x34,0x00);
+MIPI_SPI_Write( 2,0x35,0x00);
+MIPI_SPI_Write( 2,0x36,0x00);
+MIPI_SPI_Write( 2,0x37,0x00);
+MIPI_SPI_Write( 2,0x38,0x00);
+MIPI_SPI_Write( 2,0x39,0x00);
+MIPI_SPI_Write( 2,0x3a,0x00);
+MIPI_SPI_Write( 2,0x3b,0x00);
+MIPI_SPI_Write( 2,0x3c,0x00);
+MIPI_SPI_Write( 2,0x3d,0x00);
+MIPI_SPI_Write( 2,0x3e,0x00);
+MIPI_SPI_Write( 2,0x3f,0x00);
+MIPI_SPI_Write( 2,0x40,0x00);
+MIPI_SPI_Write( 2,0x41,0x00);
+MIPI_SPI_Write( 2,0x42,0x00);
+MIPI_SPI_Write( 2,0x43,0x00);
+MIPI_SPI_Write( 2,0x44,0x00);
+
+
+//#gip_2
+MIPI_SPI_Write( 2,0x50,0x01);
+MIPI_SPI_Write( 2,0x51,0x23);
+MIPI_SPI_Write( 2,0x52,0x45);
+MIPI_SPI_Write( 2,0x53,0x67);
+MIPI_SPI_Write( 2,0x54,0x89);
+MIPI_SPI_Write( 2,0x55,0xab);
+MIPI_SPI_Write( 2,0x56,0x01);
+MIPI_SPI_Write( 2,0x57,0x23);
+MIPI_SPI_Write( 2,0x58,0x45);
+MIPI_SPI_Write( 2,0x59,0x67);
+MIPI_SPI_Write( 2,0x5a,0x89);
+MIPI_SPI_Write( 2,0x5b,0xab);
+MIPI_SPI_Write( 2,0x5c,0xcd);
+MIPI_SPI_Write( 2,0x5d,0xef);
+
+//#gip_3
+MIPI_SPI_Write( 2,0x5e,0x11);
+MIPI_SPI_Write( 2,0x5f,0x06);
+MIPI_SPI_Write( 2,0x60,0x0c);
+MIPI_SPI_Write( 2,0x61,0x0d);
+MIPI_SPI_Write( 2,0x62,0x0e);
+MIPI_SPI_Write( 2,0x63,0x0f);
+MIPI_SPI_Write( 2,0x64,0x02);
+MIPI_SPI_Write( 2,0x65,0x02);
+MIPI_SPI_Write( 2,0x66,0x02);
+MIPI_SPI_Write( 2,0x67,0x02);
+MIPI_SPI_Write( 2,0x68,0x02);
+MIPI_SPI_Write( 2,0x69,0x02);
+MIPI_SPI_Write( 2,0x6a,0x02);
+MIPI_SPI_Write( 2,0x6b,0x02);
+MIPI_SPI_Write( 2,0x6c,0x02);
+MIPI_SPI_Write( 2,0x6d,0x02);
+MIPI_SPI_Write( 2,0x6e,0x05);
+MIPI_SPI_Write( 2,0x6f,0x05);
+MIPI_SPI_Write( 2,0x70,0x05);
+MIPI_SPI_Write( 2,0x71,0x02);
+MIPI_SPI_Write( 2,0x72,0x01);
+MIPI_SPI_Write( 2,0x73,0x00);
+MIPI_SPI_Write( 2,0x74,0x08);
+MIPI_SPI_Write( 2,0x75,0x08);
+MIPI_SPI_Write( 2,0x76,0x0c);
+MIPI_SPI_Write( 2,0x77,0x0d);
+MIPI_SPI_Write( 2,0x78,0x0e);
+MIPI_SPI_Write( 2,0x79,0x0f);
+MIPI_SPI_Write( 2,0x7a,0x02);
+MIPI_SPI_Write( 2,0x7b,0x02);
+MIPI_SPI_Write( 2,0x7c,0x02);
+MIPI_SPI_Write( 2,0x7d,0x02);
+MIPI_SPI_Write( 2,0x7e,0x02);
+MIPI_SPI_Write( 2,0x7f,0x02);
+MIPI_SPI_Write( 2,0x80,0x02);
+MIPI_SPI_Write( 2,0x81,0x02);
+MIPI_SPI_Write( 2,0x82,0x02);
+MIPI_SPI_Write( 2,0x83,0x02);
+MIPI_SPI_Write( 2,0x84,0x05);
+MIPI_SPI_Write( 2,0x85,0x05);
+MIPI_SPI_Write( 2,0x86,0x05);
+MIPI_SPI_Write( 2,0x87,0x02);
+MIPI_SPI_Write( 2,0x88,0x01);
+MIPI_SPI_Write( 2,0x89,0x00);
+MIPI_SPI_Write( 2,0x8a,0x06);
+
+
+//#CMD_Page 4
+MIPI_SPI_Write( 4 ,0xFF, 0x98 ,0x81, 0x04);
+MIPI_SPI_Write( 2 ,0x6C, 0x15);
+MIPI_SPI_Write( 2 ,0x6E, 0x2B);             //  #di_pwr_reg=0 VGH clamp 15V
+MIPI_SPI_Write( 2 ,0x6F, 0x33);             //  #reg vcl + VGH pumping ratio 3x VGL=-2x
+MIPI_SPI_Write( 2 ,0x3A, 0x24);             //  #power saving
+MIPI_SPI_Write( 2 ,0x8D, 0x15);             // #VGL clamp -10V  
+MIPI_SPI_Write( 2 ,0x87, 0xBA);             //  #ESD
+MIPI_SPI_Write( 2 ,0x26, 0x76);
+MIPI_SPI_Write( 2 ,0xb2, 0xd1);
+MIPI_SPI_Write( 2, 0x35, 0x1F);
+MIPI_SPI_Write( 2 ,0x32, 0x05);
+//#-----------------------------
+//#MIPI_SPI_Write( 0x37 0x01
+//#MIPI_SPI_Write( 0x06 0xC5
+//#mipi.read
+
+//#CMD_Page 1
+MIPI_SPI_Write( 4, 0xFF, 0x98 ,0x81, 0x01); 
+MIPI_SPI_Write( 2 ,0x22, 0x0A); 	//	#BGR, SS
+//MIPI_SPI_Write( 2 ,0x53, 0x63); 		//#VCOM1
+MIPI_SPI_Write( 2 ,0x55, 0x78); 	//	#VCOM2
+MIPI_SPI_Write( 2, 0x50, 0xB0);          	//#VREG1OUT=4.8V
+MIPI_SPI_Write( 2 ,0x51, 0xB1);          //	#VREG2OUT=-4.8V
+MIPI_SPI_Write( 2, 0x31, 0x00);//#column inversion
+MIPI_SPI_Write( 2, 0x60, 0x14); 		//#SDT
+//#MIPI_SPI_Write( 0x15 0x56 0x00;              # VCOM READ REGISTER   01 read register
+
+//#---------------------------
+MIPI_SPI_Write( 1, 0x01); 
+MIPI_SPI_Write( 1, 0xE8); 
+//mipi.read
+
+MIPI_SPI_Write( 2,0xa0,0x09	); 	//#vp255	gamma p
+MIPI_SPI_Write( 2,0xa1,0x2B  );             // #vp251        
+MIPI_SPI_Write( 2,0xa2,0x38 );              // #vp247        
+MIPI_SPI_Write( 2,0xa3,0x15 );              // #vp243        
+MIPI_SPI_Write( 2,0xa4,0x17 );              // #vp239        
+MIPI_SPI_Write( 2,0xa5,0x2A );              // #vp231        
+MIPI_SPI_Write( 2,0xa6,0x1C );              // #vp219        
+MIPI_SPI_Write( 2,0xa7,0x1D );              // #vp203        
+MIPI_SPI_Write( 2,0xa8,0xA6 );              // #vp175        
+MIPI_SPI_Write( 2,0xa9,0x1C );             //  #vp144        
+MIPI_SPI_Write( 2,0xaa,0x28 );              // #vp111        
+MIPI_SPI_Write( 2,0xab,0x97 );              // #vp80         
+MIPI_SPI_Write( 2,0xac,0x1C );              // #vp52         
+MIPI_SPI_Write( 2,0xad,0x1A );              // #vp36         
+MIPI_SPI_Write( 2,0xae,0x4E );              // #vp24         
+MIPI_SPI_Write( 2,0xaf,0x21 );              // #vp16         
+MIPI_SPI_Write( 2,0xb0,0x28 );              // #vp12         
+MIPI_SPI_Write( 2,0xb1,0x57 );               //#vp8          
+MIPI_SPI_Write( 2,0xb2,0x67);                //#vp4          
+MIPI_SPI_Write( 2,0xb3,0x36 );              // #vp0          
+                                               
+MIPI_SPI_Write( 2,0xc0,0x09	); 	//#vn255 gamma n
+MIPI_SPI_Write( 2,0xc1,0x2B );              // #vn251        
+MIPI_SPI_Write( 2,0xc2,0x38 );              // #vn247        
+MIPI_SPI_Write( 2,0xc3,0x15 );              // #vn243        
+MIPI_SPI_Write( 2,0xc4,0x17 );               // #vn239        
+MIPI_SPI_Write( 2,0xc5,0x2A );              // #vn231        
+MIPI_SPI_Write( 2,0xc6,0x1C );              // #vn219        
+MIPI_SPI_Write( 2,0xc7,0x1D );              // #vn203        
+MIPI_SPI_Write( 2,0xc8,0xA6 );              // #vn175        
+MIPI_SPI_Write( 2,0xc9,0x1C );              // #vn144        
+MIPI_SPI_Write( 2,0xca,0x28 );               // #vn111        
+MIPI_SPI_Write( 2,0xcb,0x97 );              // #vn80         
+MIPI_SPI_Write( 2,0xcc,0x1C );               //#vn52         
+MIPI_SPI_Write( 2,0xcd,0x1A );                //#vn36         
+MIPI_SPI_Write( 2,0xce,0x4E );                //#vn24         
+MIPI_SPI_Write( 2,0xcf,0x21 );                //#vn16         
+MIPI_SPI_Write( 2,0xd0,0x28 );                //#vn12         
+MIPI_SPI_Write( 2,0xd1,0x57 );               // #vn8          
+MIPI_SPI_Write( 2,0xd2,0x67 );                //#vn4          
+MIPI_SPI_Write( 2,0xd3,0x36 );               // #vn0  
+
+
+
+//#CMD_Page 0
+MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x00);
+//#MIPI_SPI_Write( 2 0x35 0x00);  # TE on
+MIPI_SPI_Write( 1 ,0x11); 
+DelayMs(130);
+MIPI_SPI_Write( 1 ,0x29);
+DelayMs(130);
+}
+
+void SSD2828_inition_lcd_Check(void)    //´ËÐÍºÅM¼ìÓëOTP³õÊ¼»¯·Ö¿ª
+{	
+//#===========================================================================
+//#  Main LDI Power ON Sequence
+//#===========================================================================
+//MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x01);
+//	
+//MIPI_SPI_Write( 0x37 0x01
+//MIPI_SPI_Write( 0x06 0xE8
+//mipi.read
+//MIPI_SPI_Write( 0x37 0x01
+//MIPI_SPI_Write( 0x06 0xa0
+//mipi.read
+//MIPI_SPI_Write( 0x37 0x01
+//MIPI_SPI_Write( 0x06 0xb3
+//mipi.read  
+//MIPI_SPI_Write( 0x37 0x01
+//MIPI_SPI_Write( 0x06 0xC0
+//mipi.read
+//MIPI_SPI_Write( 0x37 0x01
+//MIPI_SPI_Write( 0x06 0xD3
+////mipi.read  
+
+//#CMD_Page 4
+//MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x04);
+//MIPI_SPI_Write( 2, 0x3b, 0xc0);               //#ili4003B
+
+////#CMD_Page 1
+//MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x01);
+//MIPI_SPI_Write( 2, 0x40, 0x53);              //#ili4003B//¡£¡£¡£
+//------------1013----------------------
+
+MIPI_SPI_Write( 4, 0xFF ,0x98, 0x81, 0x02);
+//Dynamic Backlight Control
+MIPI_SPI_Write( 2, 0x06, 0x40);
+MIPI_SPI_Write( 2, 0x07 ,0x04);
+//#Dynamic Backlight Control 1
+MIPI_SPI_Write( 2, 0x03, 0x48);
+MIPI_SPI_Write( 2, 0x04 ,0x00);
+
+
+
+//#CMD_Page 0
+MIPI_SPI_Write( 4, 0xFF, 0x98 ,0x81 ,0x00);
+//#Write Display Brightness Value
+MIPI_SPI_Write( 3, 0x51, 0x02, 0x30);
+//#Write CTRL Display Value
+MIPI_SPI_Write( 2, 0x53, 0x24);
+//#Write CABC Minimum Brightness
+MIPI_SPI_Write( 3, 0x5E ,0x00 ,0xCF);
+MIPI_SPI_Write( 1, 0x11 );
+DelayMs(150);
+MIPI_SPI_Write( 4, 0xFF, 0x98 ,0x81 ,0x04);
+MIPI_SPI_Write( 2, 0x3A ,0x24);
+MIPI_SPI_Write( 2, 0x35, 0x1F);
+MIPI_SPI_Write( 2, 0x32, 0x05);
+
+MIPI_SPI_Write( 4,0xFF, 0x98, 0x81, 0x01);
+//#Source Timing Adjust PCT
+MIPI_SPI_Write( 2, 0x63, 0x00);
+
+MIPI_SPI_Write( 4, 0xFF ,0x98, 0x81 ,0x00);
+MIPI_SPI_Write( 1, 0x29);
+
+//#mipi.write 0x15 0x39
+//#mipi.write 0x39 0x80 0x07
+
+//-------------1013---------------------
+//#CMD_Page 0
+//-------------1013  MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81,0x00);
+//#MIPI_SPI_Write( 2 0x35 0x00  # TE on
+
+//-------------1013  MIPI_SPI_Write( 1, 0x11); 
+//-------------1013  DelayMs(150);
+//-------------1013  MIPI_SPI_Write( 1, 0x29);
+ DelayMs(150);
+}
+
+void Forward_scan(void)           //ÕýÉ¨
+{
+//  #BW scan=03h/FW scan=00h	
+	 SSD2828_ENTER_LP_mode();   	 Delay(5);
+	 MIPI_SPI_Write(2,0x00,0x00);
+	 MIPI_SPI_Write(2,0x36,0x00);
+	 SSD2828_VIDEO_MODE_HS();	    Delay(5);
+}
+void Backward_scan(void)          //·´É¨
+{
+//  #BW scan=03h/FW scan=00h	
+	 SSD2828_ENTER_LP_mode();   	 Delay(5);
+	 MIPI_SPI_Write(2,0x00,0x00);
+	 MIPI_SPI_Write(2,0x36,0x03);
+	 SSD2828_VIDEO_MODE_HS();	    Delay(5);
+
+}	
+/*******************************************************************************
+* Function Name  : void MTP(void)
+* Description    : otp -> vcom     //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/  
+void MTP(void)
+{	
+//#===========================================================================
+//#  Main LDI Power ON Sequence
+//#===========================================================================
+MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x04);  //’ñÓÃƒÈ²¿OTP
+DelayMs(20);
+//#MIPI_SPI_Write( 0x39 0x6E 0x2A #di_pwr_reg=0 for power mode 2A 
+DelayMs(20);
+MIPI_SPI_Write( 2 ,0x6F, 0x35); //#reg vcl
+
+MIPI_SPI_Write( 2, 0xD7, 0x04); //#INTERNAL OTP
+DelayMs(120);
+
+MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x00);
+DelayMs(120);
+MIPI_SPI_Write( 1, 0x11); //#sleep out
+DelayMs(120);
+	
+MIPI_SPI_Write( 1, 0x28); //#display off
+DelayMs(120);
+
+MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x01);
+
+DelayMs(120);
+
+//###############################################################################################
+MIPI_SPI_Write( 2, 0xE0, VCOMDC1);                      // #VCOM Vaule~~~~~
+//###############SetVcom____#####################################################################
+MIPI_SPI_Write( 2, 0xE1, 0x05);			 //arr µÍ°ËÎ»   ²éÑ¯page 213
+MIPI_SPI_Write( 2, 0xE2, 0x00);      //arr ¸ß°ËÎ»
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+if(ID_OK==1)	//ÈôIDÒ»´ÎÎ´Ÿý		
+{	
+//###############################################################################################
+MIPI_SPI_Write( 2, 0xE0, ID1_VALUE);                      // #ID1 Vaule 
+//#################SetID1___#####################################################################
+MIPI_SPI_Write( 2,0xE1,0x01);			 
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+
+DelayMs(20);
+
+//###############################################################################################
+MIPI_SPI_Write( 2, 0xE0, ID2_VALUE);                       //#ID2 
+//#################SetID2___#####################################################################
+MIPI_SPI_Write( 2,0xE1,0x02);			 
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+
+DelayMs(20);
+
+//###############################################################################################
+MIPI_SPI_Write( 2, 0xE0, ID3_VALUE);                       //#ID3
+//#################SetID3___#####################################################################
+MIPI_SPI_Write( 2,0xE1,0x03);			 
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+
+DelayMs(20);
+}
+//#~~~~~~~voltage set~~~~~
+//#CMD_Page 4
+
+//#P4_6E REGISTER,6C,01,15   //VCORE
+MIPI_SPI_Write( 2,0xE0,0x15);
+MIPI_SPI_Write( 2,0xE1,0x39);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P4_6E MIPI_SPI_Write( 0x39 0x6E 0x01 0x2B   #VGH clamp
+MIPI_SPI_Write( 2, 0xE0, 0x2B);
+MIPI_SPI_Write( 2, 0xE1, 0xB0);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P4_6F MIPI_SPI_Write( 0x39 0x6F 0x01 0xD3   # reg vcl + VGH pumping rati
+MIPI_SPI_Write( 2, 0xE0, 0x33);
+MIPI_SPI_Write( 2, 0xE1, 0xB1);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+////#P4_3A MIPI_SPI_Write( 0x39 0x3A 0x01 0xA4   #POWER SAVING
+//MIPI_SPI_Write( 2, 0xE0, 0xA4);
+//MIPI_SPI_Write( 2, 0xE1, 0xAB);
+//MIPI_SPI_Write( 2, 0xE2, 0x01);
+//MIPI_SPI_Write( 2, 0xE3, 0x55);
+//MIPI_SPI_Write( 2, 0xE4, 0xAA);
+//MIPI_SPI_Write( 2, 0xE5, 0x66);
+//DelayMs(20);
+
+//#P4_3A MIPI_SPI_Write( 2, 0x3A 0x01 0x24   #POWER SAVING  2015 05 27 
+MIPI_SPI_Write( 2, 0xE0, 0x24);
+MIPI_SPI_Write( 2, 0xE1, 0xAB);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P4_35 MIPI_SPI_Write( 2, 0x35 0x01 0x1F   #  2015 05 27 
+MIPI_SPI_Write( 2, 0xE0, 0x1F);
+MIPI_SPI_Write( 2, 0xE1, 0xA6);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P4_32 MIPI_SPI_Write( 2, 0x32 0x01 0x05   #  2015 05 27 
+MIPI_SPI_Write( 2, 0xE0, 0x05);
+MIPI_SPI_Write( 2, 0xE1, 0xA3);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P4_8D MIPI_SPI_Write( 0x39 0x8D 0x01 0x15   #VGL clamp
+MIPI_SPI_Write( 2, 0xE0,0x15);
+MIPI_SPI_Write( 2, 0xE1,0xC4);
+MIPI_SPI_Write( 2, 0xE2,0x01);
+MIPI_SPI_Write( 2, 0xE3,0x55);
+MIPI_SPI_Write( 2, 0xE4,0xAA);
+MIPI_SPI_Write( 2, 0xE5,0x66);
+DelayMs(20);
+
+//#P4_87 REGISTER,87,01,BA   //ESD
+MIPI_SPI_Write( 2,0xE0,0xBA);
+MIPI_SPI_Write( 2,0xE1,0xBE);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P4_26 REGISTER,26,01,76   //ESD
+MIPI_SPI_Write( 2,0xE0,0x76);
+MIPI_SPI_Write( 2,0xE1,0x97);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P4_B2 REGISTER,B2,01,D1   //ESD
+MIPI_SPI_Write( 2,0xE0,0xD1);
+MIPI_SPI_Write( 2,0xE1,0xE3);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+
+//#-------------------------
+//#CMD_Page 1
+
+//#P1_22 MIPI_SPI_Write( 0x39 0x22 0x01 0x0A  #BGR 0xSS
+MIPI_SPI_Write( 2, 0xE0, 0x0A);
+MIPI_SPI_Write( 2, 0xE1, 0x44);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#VCOM1_8  P1_52
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x04);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#VCOM1_7-0  P1_53 MIPI_SPI_Write( 0x39 0x53 0x01 0x8A 
+//#MIPI_SPI_Write( 0x39 0xE0 0x8A     
+//#MIPI_SPI_Write( 0x39 0xE1 0x05
+//#MIPI_SPI_Write( 0x39 0xE2 0x00
+//#MIPI_SPI_Write( 0x39 0xE3 0x55
+//#MIPI_SPI_Write( 0x39 0xE4 0xAA
+//#MIPI_SPI_Write( 0x39 0xE5 0x66
+//#delay 20
+
+//#VCOM2_8  P1_54
+//#MIPI_SPI_Write( 0x39 0xE0 0x00
+//#MIPI_SPI_Write( 0x39 0xE1 0x06
+//#MIPI_SPI_Write( 0x39 0xE2 0x00
+//#MIPI_SPI_Write( 0x39 0xE3 0x55
+//#MIPI_SPI_Write( 0x39 0xE4 0xAA
+//#MIPI_SPI_Write( 0x39 0xE5 0x66
+//#delay 20
+
+//#VCOM2_7-0  P1_55 MIPI_SPI_Write( 0x39 0x55 0x01 0x93
+//#MIPI_SPI_Write( 0x39 0xE0 0x93
+//#MIPI_SPI_Write( 0x39 0xE1 0x07
+//#MIPI_SPI_Write( 0x39 0xE2 0x00
+//#MIPI_SPI_Write( 0x39 0xE3 0x55
+//#MIPI_SPI_Write( 0x39 0xE4 0xAA
+//#MIPI_SPI_Write( 0x39 0xE5 0x66
+//delay 20
+
+//#VREG1 P1_50
+MIPI_SPI_Write( 2,0xE0,0xB0);
+MIPI_SPI_Write( 2,0xE1,0x08);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#VREG2 P1_51
+MIPI_SPI_Write( 2,0xE0,0xB1);
+MIPI_SPI_Write( 2,0xE1,0x09);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P1_31 MIPI_SPI_Write( 0x39 0x31 0x01 0x00  # column inversion
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x46);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P1_60 SDT
+MIPI_SPI_Write( 2,0xE0,0x14);
+MIPI_SPI_Write( 2,0xE1,0x4D);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+
+//#~~~~~~GIP timing~~~~~~~
+
+MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81 ,0x01);
+DelayMs(20);
+
+//#P3_01 MIPI_SPI_Write( 0x39 0x01 0x01 0x00
+MIPI_SPI_Write( 2,0xE0 ,0x00);
+MIPI_SPI_Write( 2,0xE1 ,0xF0);
+MIPI_SPI_Write( 2,0xE2 ,0x00);
+MIPI_SPI_Write( 2,0xE3 ,0x55);
+MIPI_SPI_Write( 2,0xE4 ,0xAA);
+MIPI_SPI_Write( 2,0xE5 ,0x66);
+DelayMs(20);
+
+//#P3_02 MIPI_SPI_Write( 0x39 0x02 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0xF1);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_03 MIPI_SPI_Write( 0x39 0x03 0x01 0x55
+MIPI_SPI_Write( 2,0xE0,0x55);
+MIPI_SPI_Write( 2,0xE1,0xF2);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_04 MIPI_SPI_Write( 0x39 0x04 0x01 0x13
+MIPI_SPI_Write( 2,0xE0,0x13);
+MIPI_SPI_Write( 2,0xE1,0xF3);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_05 MIPI_SPI_Write( 0x39 0x05 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0xF4);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_06 MIPI_SPI_Write( 0x39 0x06 0x01 0x06
+MIPI_SPI_Write( 2,0xE0,0x06);
+MIPI_SPI_Write( 2,0xE1,0xF5);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_07 MIPI_SPI_Write( 0x39 0x07 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x01);
+MIPI_SPI_Write( 2,0xE1,0xF6);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_08 MIPI_SPI_Write( 0x39 0x08 0x01 0x04
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0xF7);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_09 MIPI_SPI_Write( 0x39 0x09 0x01 0x04
+MIPI_SPI_Write( 2,0xE0,0x01);
+MIPI_SPI_Write( 2,0xE1,0xF8);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_0A MIPI_SPI_Write( 0x39 0x0a 0x01 0x03
+MIPI_SPI_Write( 2,0xE0,0x01);
+MIPI_SPI_Write( 2,0xE1,0xF9);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_0B MIPI_SPI_Write( 0x39 0x0b 0x01 0x03
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0xFA);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_0C MIPI_SPI_Write( 0x39 0x0c 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0xFB);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_0D MIPI_SPI_Write( 0x39 0x0d 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0xFC);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_0E MIPI_SPI_Write( 0x39 0x0e 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0xFD);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_0F MIPI_SPI_Write( 0x39 0x0f 0x01 0x04
+MIPI_SPI_Write( 2,0xE0,0x19);
+MIPI_SPI_Write( 2,0xE1,0xFE);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_10 MIPI_SPI_Write( 0x39 0x10 0x01 0x04
+MIPI_SPI_Write( 2,0xE0,0x19);
+MIPI_SPI_Write( 2,0xE1,0xFF);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_11 MIPI_SPI_Write( 0x39 0x11 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x20);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_12 MIPI_SPI_Write( 0x39 0x12 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x21);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_13 MIPI_SPI_Write( 0x39 0x13 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x22);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_14 MIPI_SPI_Write( 0x39 0x14 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x23);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_15 MIPI_SPI_Write( 0x39 0x15 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x24);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_16 MIPI_SPI_Write( 0x39 0x16 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x25);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_17 MIPI_SPI_Write( 0x39 0x17 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x26);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_18 MIPI_SPI_Write( 0x39 0x18 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x27);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_19 MIPI_SPI_Write( 0x39 0x19 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x28);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_1A MIPI_SPI_Write( 0x39 0x1a 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x29);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_1B MIPI_SPI_Write( 0x39 0x1b 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x2A);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_1C MIPI_SPI_Write( 0x39 0x1c 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x2B);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_1D MIPI_SPI_Write( 0x39 0x1d 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x2C);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_1E MIPI_SPI_Write( 0x39 0x1e 0x01 0xC0
+MIPI_SPI_Write( 2, 0xE0, 0x44);
+MIPI_SPI_Write( 2, 0xE1, 0x2D);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_1F MIPI_SPI_Write( 0x39 0x1f 0x01 0x80
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x2E);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_20 MIPI_SPI_Write( 0x39 0x20 0x01 0x04
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x2F);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_21 MIPI_SPI_Write( 0x39 0x21 0x01 0x0B
+MIPI_SPI_Write( 2, 0xE0, 0x03);
+MIPI_SPI_Write( 2, 0xE1, 0x30);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_22 MIPI_SPI_Write( 0x39 0x22 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x31);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_23 MIPI_SPI_Write( 0x39 0x23 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x32);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_24 MIPI_SPI_Write( 0x39 0x24 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x33);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_25 MIPI_SPI_Write( 0x39 0x25 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x34);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_26 MIPI_SPI_Write( 0x39 0x26 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x35);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_27 MIPI_SPI_Write( 0x39 0x27 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x36);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_28 MIPI_SPI_Write( 0x39 0x28 0x01 0x55
+MIPI_SPI_Write( 2, 0xE0, 0x33);
+MIPI_SPI_Write( 2, 0xE1, 0x37);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_29 MIPI_SPI_Write( 0x39 0x29 0x01 0x03
+MIPI_SPI_Write( 2, 0xE0, 0x03);
+MIPI_SPI_Write( 2, 0xE1, 0x38);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_2A MIPI_SPI_Write( 0x39 0x2a 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x39);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_2B MIPI_SPI_Write( 0x39 0x2b 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x3A);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_2C MIPI_SPI_Write( 0x39 0x2c 0x01 0x06
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x3B);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_2D MIPI_SPI_Write( 0x39 0x2d 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x3C);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_2E MIPI_SPI_Write( 0x39 0x2e 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0,0x00);
+MIPI_SPI_Write( 2, 0xE1,0x3D);
+MIPI_SPI_Write( 2, 0xE2,0x01);
+MIPI_SPI_Write( 2, 0xE3,0x55);
+MIPI_SPI_Write( 2, 0xE4,0xAA);
+MIPI_SPI_Write( 2, 0xE5,0x66);
+DelayMs(20);
+//#P3_2F MIPI_SPI_Write( 0x39 0x2f 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x3E);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_30 MIPI_SPI_Write( 0x39 0x30 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x3F);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_31 MIPI_SPI_Write( 0x39 0x31 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x40);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4 ,0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_32 MIPI_SPI_Write( 0x39 0x32 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x41);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_33 MIPI_SPI_Write( 0x39 0x33 0x01 0x30
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x42);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_34 MIPI_SPI_Write( 0x39 0x34 0x01 0x04
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x43);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_35 MIPI_SPI_Write( 0x39 0x35 0x01 0x05
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x44);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_36 MIPI_SPI_Write( 0x39 0x36 0x01 0x05
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x45);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_37 MIPI_SPI_Write( 0x39 0x37 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x46);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_38 MIPI_SPI_Write( 0x39 0x38 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x47);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_39 MIPI_SPI_Write( 0x39 0x39 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x48);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_3A MIPI_SPI_Write( 0x39 0x3a 0x01 0x40
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x49);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_3B MIPI_SPI_Write( 0x39 0x3b 0x01 0x40
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x4A);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_3C MIPI_SPI_Write( 0x39 0x3c 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x4B);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_3D MIPI_SPI_Write( 0x39 0x3d 0x01 0x00
+MIPI_SPI_Write( 2 ,0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x4C);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_3E MIPI_SPI_Write( 0x39 0x3e 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x4D);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_3F MIPI_SPI_Write( 0x39 0x3f 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x4E);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_40 MIPI_SPI_Write( 0x39 0x40 0x01 0x00
+MIPI_SPI_Write( 2,0xE0,0x00);
+MIPI_SPI_Write( 2,0xE1,0x4F);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_41 MIPI_SPI_Write( 0x39 0x41 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x50);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_42 MIPI_SPI_Write( 0x39 0x42 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x51);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_43 MIPI_SPI_Write( 0x39 0x43 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x52);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_44 MIPI_SPI_Write( 0x39 0x44 0x01 0x00
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x53);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+
+//#GIP_2
+//#P3_50 MIPI_SPI_Write( 0x39 0x50 0x01 0x01
+MIPI_SPI_Write( 2, 0xE0, 0x01);
+MIPI_SPI_Write( 2, 0xE1, 0x54);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_51 MIPI_SPI_Write( 0x39 0x51 0x01 0x23
+MIPI_SPI_Write( 2, 0xE0, 0x23);
+MIPI_SPI_Write( 2, 0xE1, 0x55);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+//#P3_52 MIPI_SPI_Write( 0x39 0x52 0x01 0x45
+MIPI_SPI_Write( 2, 0xE0, 0x45);
+MIPI_SPI_Write( 2, 0xE1, 0x56);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_53 MIPI_SPI_Write( 0x39 0x53 0x01 0x67
+MIPI_SPI_Write( 2, 0xE0, 0x67);
+MIPI_SPI_Write( 2, 0xE1, 0x57);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_54 MIPI_SPI_Write( 0x39 0x54 0x01 0x89
+MIPI_SPI_Write( 2, 0xE0, 0x89);
+MIPI_SPI_Write( 2, 0xE1, 0x58);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_55 MIPI_SPI_Write( 0x39 0x55 0x01 0xab
+MIPI_SPI_Write( 2, 0xE0, 0xAB);
+MIPI_SPI_Write( 2, 0xE1, 0x59);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_56 MIPI_SPI_Write( 0x39 0x56 0x01 0x01
+MIPI_SPI_Write( 2, 0xE0, 0x01);
+MIPI_SPI_Write( 2, 0xE1, 0x5A);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5 ,0x66);
+DelayMs(20);
+
+//#P3_57 MIPI_SPI_Write( 0x39 0x57 0x01 0x23
+MIPI_SPI_Write( 2, 0xE0, 0x23);
+MIPI_SPI_Write( 2, 0xE1, 0x5B);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+//#P3_58 MIPI_SPI_Write( 0x39 0x58 0x01 0x45
+MIPI_SPI_Write( 2, 0xE0, 0x45);
+MIPI_SPI_Write( 2, 0xE1, 0x5C);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_59 MIPI_SPI_Write( 0x39 0x59 0x01 0x67
+MIPI_SPI_Write( 2, 0xE0, 0x67);
+MIPI_SPI_Write( 2, 0xE1 ,0x5D);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_5A MIPI_SPI_Write( 0x39 0x5a 0x01 0x89
+MIPI_SPI_Write( 2, 0xE0, 0x89);
+MIPI_SPI_Write( 2, 0xE1, 0x5E);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_5B MIPI_SPI_Write( 0x39 0x5b 0x01 0xab
+MIPI_SPI_Write( 2 ,0xE0, 0xAB);
+MIPI_SPI_Write( 2 ,0xE1 ,0x5F);
+MIPI_SPI_Write( 2 ,0xE2 ,0x01);
+MIPI_SPI_Write( 2 ,0xE3 ,0x55);
+MIPI_SPI_Write( 2 ,0xE4 ,0xAA);
+MIPI_SPI_Write( 2, 0xE5 ,0x66);
+DelayMs(20);
+
+//#P3_5C MIPI_SPI_Write( 0x39 0x5c 0x01 0xcd
+MIPI_SPI_Write( 2, 0xE0 ,0xCD);
+MIPI_SPI_Write( 2, 0xE1, 0x60);
+MIPI_SPI_Write( 2, 0xE2 ,0x01);
+MIPI_SPI_Write( 2, 0xE3 ,0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_5D MIPI_SPI_Write( 0x39 0x5d 0x01 0xef
+MIPI_SPI_Write( 2, 0xE0, 0xEF);
+MIPI_SPI_Write( 2, 0xE1, 0x61);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#GIP3
+//#P3_5E MIPI_SPI_Write( 0x39 0x5e 0x01 0x01
+MIPI_SPI_Write( 2, 0xE0, 0x11);
+MIPI_SPI_Write( 2, 0xE1, 0x62);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_5F MIPI_SPI_Write( 0x39 0x5f 0x01 0x14
+MIPI_SPI_Write( 2, 0xE0, 0x06);
+MIPI_SPI_Write( 2, 0xE1, 0x63);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_60 MIPI_SPI_Write( 0x39 0x60 0x01 0x15
+MIPI_SPI_Write( 2, 0xE0, 0x0C);
+MIPI_SPI_Write( 2, 0xE1, 0x64);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_61 MIPI_SPI_Write( 0x39 0x61 0x01 0x0C
+MIPI_SPI_Write( 2, 0xE0, 0x0D);
+MIPI_SPI_Write( 2, 0xE1, 0x65);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_62 MIPI_SPI_Write( 0x39 0x62 0x01 0x0D
+MIPI_SPI_Write( 2, 0xE0, 0x0E);
+MIPI_SPI_Write( 2, 0xE1, 0x66);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+//#P3_63 MIPI_SPI_Write( 0x39 0x63 0x01 0x0E
+MIPI_SPI_Write( 2, 0xE0, 0x0F);
+MIPI_SPI_Write( 2, 0xE1, 0x67);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_64 MIPI_SPI_Write( 0x39 0x64 0x01 0x0F
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x68);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_65 MIPI_SPI_Write( 0x39 0x65 0x01 0x10
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x69);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_66 MIPI_SPI_Write( 0x39 0x66 0x01 0x11
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x6A);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+//#P3_67 MIPI_SPI_Write( 0x39 0x67 0x01 0x08
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x6B);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_68 MIPI_SPI_Write( 0x39 0x68 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x6C);
+MIPI_SPI_Write( 2 ,0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_69 MIPI_SPI_Write( 0x39 0x69 0x01 0x0A
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x6D);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_6A MIPI_SPI_Write( 0x39 0x6a 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x6E);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_6B MIPI_SPI_Write( 0x39 0x6b 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x6F);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_6C MIPI_SPI_Write( 0x39 0x6c 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x70);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_6D MIPI_SPI_Write( 0x39 0x6d 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x71);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_6E MIPI_SPI_Write( 0x39 0x6e 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x05);
+MIPI_SPI_Write( 2, 0xE1, 0x72);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+ 
+//#P3_6F MIPI_SPI_Write( 0x39 0x6f 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x05);
+MIPI_SPI_Write( 2, 0xE1, 0x73);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_70 MIPI_SPI_Write( 0x39 0x70 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x05);
+MIPI_SPI_Write( 2, 0xE1, 0x74);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_71 MIPI_SPI_Write( 0x39 0x71 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x75);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_72 MIPI_SPI_Write( 0x39 0x72 0x01 0x06
+MIPI_SPI_Write( 2, 0xE0, 0x01);
+MIPI_SPI_Write( 2, 0xE1, 0x76);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_73 MIPI_SPI_Write( 0x39 0x73 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x77);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_74 MIPI_SPI_Write( 0x39 0x74 0x01 0x02
+MIPI_SPI_Write( 2,0xE0,0x08);
+MIPI_SPI_Write( 2,0xE1,0x78);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_75 MIPI_SPI_Write( 0x39 0x75 0x01 0x14
+MIPI_SPI_Write( 2, 0xE0, 0x08);
+MIPI_SPI_Write( 2, 0xE1, 0x79);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_76 MIPI_SPI_Write( 0x39 0x76 0x01 0x15
+MIPI_SPI_Write( 2, 0xE0, 0x0C);
+MIPI_SPI_Write( 2, 0xE1, 0x7A);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_77 MIPI_SPI_Write( 0x39 0x77 0x01 0x11
+MIPI_SPI_Write( 2, 0xE0, 0x0D);
+MIPI_SPI_Write( 2, 0xE1, 0x7B);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_78 MIPI_SPI_Write( 0x39 0x78 0x01 0x10
+MIPI_SPI_Write( 2, 0xE0,0x0E);
+MIPI_SPI_Write( 2, 0xE1,0x7C);
+MIPI_SPI_Write( 2, 0xE2,0x01);
+MIPI_SPI_Write( 2, 0xE3,0x55);
+MIPI_SPI_Write( 2, 0xE4,0xAA);
+MIPI_SPI_Write( 2, 0xE5,0x66);
+DelayMs(20);
+
+//#P3_79 MIPI_SPI_Write( 0x39 0x79 0x01 0x0F
+MIPI_SPI_Write( 2, 0xE0, 0x0F);
+MIPI_SPI_Write( 2, 0xE1, 0x7D);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_7A MIPI_SPI_Write( 0x39 0x7a 0x01 0x0E
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x7E);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_7B MIPI_SPI_Write( 0x39 0x7b 0x01 0x0D
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x7F);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_7C MIPI_SPI_Write( 0x39 0x7c 0x01 0x0C
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x80);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_7D MIPI_SPI_Write( 0x39 0x7d 0x01 0x06
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x81);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_7E MIPI_SPI_Write( 0x39 0x7e 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x82);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_7F MIPI_SPI_Write( 0x39 0x7f 0x01 0x0A
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x83);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_80 MIPI_SPI_Write( 0x39 0x80 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x84);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_81 MIPI_SPI_Write( 0x39 0x81 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x85);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_82 MIPI_SPI_Write( 0x39 0x82 0x01 0x02
+MIPI_SPI_Write( 2,0xE0,0x02);
+MIPI_SPI_Write( 2,0xE1,0x86);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#P3_83 MIPI_SPI_Write( 0x39 0x83 0x01 0x02
+MIPI_SPI_Write( 2 ,0xE0 ,0x02);
+MIPI_SPI_Write( 2 ,0xE1 ,0x87);
+MIPI_SPI_Write( 2 ,0xE2 ,0x01);
+MIPI_SPI_Write( 2 ,0xE3 ,0x55);
+MIPI_SPI_Write( 2 ,0xE4 ,0xAA);
+MIPI_SPI_Write( 2 ,0xE5 ,0x66);
+DelayMs(20);
+//#P3_84 MIPI_SPI_Write( 0x39 0x84 0x01 0x02
+MIPI_SPI_Write( 2 ,0xE0 ,0x05);
+MIPI_SPI_Write( 2 ,0xE1 ,0x88);
+MIPI_SPI_Write( 2 ,0xE2 ,0x01);
+MIPI_SPI_Write( 2 ,0xE3 ,0x55);
+MIPI_SPI_Write( 2 ,0xE4 ,0xAA);
+MIPI_SPI_Write( 2 ,0xE5 ,0x66);
+DelayMs(20);
+
+//#P3_85 MIPI_SPI_Write( 0x39 0x85 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0 ,0x05);
+MIPI_SPI_Write( 2, 0xE1 ,0x89);
+MIPI_SPI_Write( 2, 0xE2 ,0x01);
+MIPI_SPI_Write( 2, 0xE3 ,0x55);
+MIPI_SPI_Write( 2, 0xE4 ,0xAA);
+MIPI_SPI_Write( 2, 0xE5 ,0x66);
+DelayMs(20);
+
+//#P3_86 MIPI_SPI_Write( 0x39 0x86 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x05);
+MIPI_SPI_Write( 2, 0xE1, 0x8A);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_87 MIPI_SPI_Write( 0x39 0x87 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x02);
+MIPI_SPI_Write( 2, 0xE1, 0x8B);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_88 MIPI_SPI_Write( 0x39 0x88 0x01 0x08
+MIPI_SPI_Write( 2, 0xE0, 0x01);
+MIPI_SPI_Write( 2, 0xE1, 0x8C);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#P3_89 MIPI_SPI_Write( 0x39 0x89 0x01 0x02
+MIPI_SPI_Write( 2, 0xE0, 0x00);
+MIPI_SPI_Write( 2, 0xE1, 0x8D);
+MIPI_SPI_Write( 2, 0xE2, 0x01);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+//#P3_8A MIPI_SPI_Write( 0x39 0x8a 0x01 0x02
+MIPI_SPI_Write( 2,0xE0,0x06);
+MIPI_SPI_Write( 2,0xE1,0x8E);
+MIPI_SPI_Write( 2,0xE2,0x01);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+//#~~~~~~~~~~~Gamma~~~~~~~~~
+
+MIPI_SPI_Write( 4, 0xFF, 0x98, 0x81, 0x01);
+DelayMs(20);
+
+
+//#---------------------
+//#GAMP0 P1_A0
+MIPI_SPI_Write( 2, 0xE0, 0x09);
+MIPI_SPI_Write( 2, 0xE1, 0x68);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#GAMP1 P1_A1
+MIPI_SPI_Write( 2, 0xE0, 0x2B);
+MIPI_SPI_Write( 2, 0xE1, 0x69);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#GAMP2 P1_A2
+MIPI_SPI_Write( 2, 0xE0, 0x38);
+MIPI_SPI_Write( 2, 0xE1, 0x6A);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#GAMP3 P1_A3
+MIPI_SPI_Write( 2, 0xE0, 0x15);
+MIPI_SPI_Write( 2, 0xE1, 0x6B);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#GAMP4 P1_A4
+MIPI_SPI_Write( 2, 0xE0, 0x17);
+MIPI_SPI_Write( 2, 0xE1, 0x6C);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#GAMP5 P1_A5
+MIPI_SPI_Write( 2,0xE0,0x2A);
+MIPI_SPI_Write( 2,0xE1,0x6D);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP6 P1_A6
+MIPI_SPI_Write( 2,0xE0,0x1C);
+MIPI_SPI_Write( 2,0xE1,0x6E);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP7 P1_A7
+MIPI_SPI_Write( 2,0xE0,0x1D);
+MIPI_SPI_Write( 2,0xE1,0x6F);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP8 P1_A8
+MIPI_SPI_Write( 2,0xE0,0xA6);
+MIPI_SPI_Write( 2,0xE1,0x70);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP9 P1_A9
+MIPI_SPI_Write( 2,0xE0,0x1C);
+MIPI_SPI_Write( 2,0xE1,0x71);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP10 P1_AA
+MIPI_SPI_Write( 2,0xE0,0x28);
+MIPI_SPI_Write( 2,0xE1,0x72);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP11 P1_AB
+MIPI_SPI_Write( 2,0xE0,0x97);
+MIPI_SPI_Write( 2,0xE1,0x73);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP12 P1_AC
+MIPI_SPI_Write( 2,0xE0,0x1C);
+MIPI_SPI_Write( 2,0xE1,0x74);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP13 P1_AD
+MIPI_SPI_Write( 2,0xE0,0x1A);
+MIPI_SPI_Write( 2,0xE1,0x75);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP14 P1_AE
+MIPI_SPI_Write( 2,0xE0,0x4E);
+MIPI_SPI_Write( 2,0xE1,0x76);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP15 P1_AF
+MIPI_SPI_Write( 2,0xE0,0x21);
+MIPI_SPI_Write( 2,0xE1,0x77);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP16 P1_B0
+MIPI_SPI_Write( 2,0xE0,0x28);
+MIPI_SPI_Write( 2,0xE1,0x78);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP17 P1_B1
+MIPI_SPI_Write( 2,0xE0,0x57);
+MIPI_SPI_Write( 2,0xE1,0x79);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP18 P1_B2
+MIPI_SPI_Write( 2,0xE0,0x67);
+MIPI_SPI_Write( 2,0xE1,0x7A);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMP19 P1_B3
+MIPI_SPI_Write( 2,0xE0,0x36);
+MIPI_SPI_Write( 2,0xE1,0x7B);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN0 P1_C0
+MIPI_SPI_Write( 2,0xE0,0x09);
+MIPI_SPI_Write( 2,0xE1,0x7C);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN1 P1_C1
+MIPI_SPI_Write( 2,0xE0,0x2B);
+MIPI_SPI_Write( 2,0xE1,0x7D);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN2 P1_C2
+MIPI_SPI_Write( 2,0xE0,0x38);
+MIPI_SPI_Write( 2,0xE1,0x7E);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN3 P1_C3
+MIPI_SPI_Write( 2,0xE0,0x15);
+MIPI_SPI_Write( 2,0xE1,0x7F);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN4 P1_C4
+MIPI_SPI_Write( 2,0xE0,0x17);
+MIPI_SPI_Write( 2,0xE1,0x80);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN5 P1_C5
+MIPI_SPI_Write( 2,0xE0,0x2A);
+MIPI_SPI_Write( 2,0xE1,0x81);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN6 P1_C6
+MIPI_SPI_Write( 2,0xE0,0x1C);
+MIPI_SPI_Write( 2,0xE1,0x82);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+//#GAMN7 P1_C7
+MIPI_SPI_Write( 2,0xE0,0x1D);
+MIPI_SPI_Write( 2,0xE1,0x83);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN8 P1_C8
+MIPI_SPI_Write( 2,0xE0,0xA6);
+MIPI_SPI_Write( 2,0xE1,0x84);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN9 P1_C9
+MIPI_SPI_Write( 2,0xE0,0x1C);
+MIPI_SPI_Write( 2,0xE1,0x85);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN10 P1_CA
+MIPI_SPI_Write( 2,0xE0,0x28);
+MIPI_SPI_Write( 2,0xE1,0x86);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+//#GAMN11 P1_CB
+MIPI_SPI_Write( 2,0xE0,0x97);
+MIPI_SPI_Write( 2,0xE1,0x87);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN12 P1_CC
+MIPI_SPI_Write( 2,0xE0,0x1C);
+MIPI_SPI_Write( 2,0xE1,0x88);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN13 P1_CD
+MIPI_SPI_Write( 2,0xE0,0x1A);
+MIPI_SPI_Write( 2,0xE1,0x89);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN14 P1_CE
+MIPI_SPI_Write( 2,0xE0,0x4E);
+MIPI_SPI_Write( 2,0xE1,0x8A);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+//#GAMN15 P1_CF
+MIPI_SPI_Write( 2,0xE0,0x21);
+MIPI_SPI_Write( 2,0xE1,0x8B);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN16 P1_D0
+MIPI_SPI_Write( 2,0xE0,0x28);
+MIPI_SPI_Write( 2,0xE1,0x8C);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN17 P1_D1
+MIPI_SPI_Write( 2,0xE0,0x57);
+MIPI_SPI_Write( 2,0xE1,0x8D);
+MIPI_SPI_Write( 2,0xE2,0x00);
+MIPI_SPI_Write( 2,0xE3,0x55);
+MIPI_SPI_Write( 2,0xE4,0xAA);
+MIPI_SPI_Write( 2,0xE5,0x66);
+DelayMs(20);
+
+//#GAMN18 P1_D2
+MIPI_SPI_Write( 2, 0xE0, 0x67);
+MIPI_SPI_Write( 2, 0xE1, 0x8E);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+//#GAMN19 P1_D3
+MIPI_SPI_Write( 2, 0xE0, 0x36);
+MIPI_SPI_Write( 2, 0xE1, 0x8F);
+MIPI_SPI_Write( 2, 0xE2, 0x00);
+MIPI_SPI_Write( 2, 0xE3, 0x55);
+MIPI_SPI_Write( 2, 0xE4, 0xAA);
+MIPI_SPI_Write( 2, 0xE5, 0x66);
+DelayMs(20);
+
+
+
+//##~~~~~~~~~~~~~~END
+//mipi.video.disable
+//mipi.clock.disable
+//mipi.lane.disable
+
+//board.power.off all	
+//BACK_LIGHT_ON();  //ÏÈÖ´ÐÐ BACK_LIGHT_OFF();»òPC7ÏÈ³õÊ¼»¯ºó£¬±¾º¯Êý²ÅÕý³£		
+
+}
+
+#endif
 
 
 
@@ -2545,584 +4949,6 @@ void MTP_ID(void)
 
 
 
-#ifdef HXD800x1280
-//////mipi video mode setting
-u16 value_HighSpeed = 610;
-u16 value_Lane_select = 4;
-   
-u16  VDP= 1280;      
-u16  VBP= 12;    //25   3     16
-u16  VFP= 15;    //35   8     18
-
-u16  HDP= 800;     
-u16  HBP= 45;     //	60   59    56
-u16  HFP= 46;     //	80   16    58
-
-u16	 HPW=5;  //Í¨³£²»ÐèÒªµ÷Õû  5
-u16	 VPW=4;  //Í¨³£²»ÐèÒªµ÷Õû  5
-/////////////080WQ USE    inition/////
-u8 PIC_NUM=10;       //ëŠœy®‹Ãæ×ÜÊý
-u8 Flicker_OTP=1;    //OTP flicker ®‹Ãæ¾ŽÌ–
-u8 Flicker_OQC=1;    //QC flicker  ®‹Ãæ¾ŽÌ–
-//-------------------------------------------------------------------
-//vcom½×´ÎÉè¶¨·½Ê½
-void VCOM_set(u8 vcom)
-{
-   MIPI_SPI_Write(4, 0xFF, 0x61, 0x36, 0x01);   //ÇÐ»»ÖÁpage1
-	 MIPI_SPI_Write(2, 0x56, 0x00); 
-	 MIPI_SPI_Write(2, 0x53, vcom);   //µ±OTPÒÑ¾­ÉÕÈë³É¹¦ºó£¬NVMÎ»»á×Ô¶¯ÖÃ1
-}   
-//IDÖµÉè¶¨·½Ê½
-void ID_set(void)
-{
-
-}		
-void SSD2828_inition_lcd(void)    //IC³õÊ¼»¯
-{
-//#Turn On Internal VGH/L Circuit
-//#R4Ch_00h: Enable ; R4Ch_08h : Disable
-MIPI_SPI_Write(4 , 0xFF, 0x61 ,0x36, 0x08);
-MIPI_SPI_Write(2,  0x4C, 0x00);
-
-//#Page1 for POS gamma correction
-MIPI_SPI_Write(4, 0xFF, 0x61, 0x36, 0x01);
-MIPI_SPI_Write(2,  0xA0, 0x05);
-MIPI_SPI_Write(2,  0xA1 ,0x05);
-MIPI_SPI_Write(2,  0xA2, 0x06);
-MIPI_SPI_Write(2,  0xA3 ,0x0d);
-MIPI_SPI_Write(2,  0xA4 ,0x04);
-MIPI_SPI_Write(2,  0xA5, 0x07);
-MIPI_SPI_Write(2,  0xA6, 0x0f);
-MIPI_SPI_Write(2,  0xA7 ,0x14);
-MIPI_SPI_Write(2,  0xA8, 0x1F);
-MIPI_SPI_Write(2,  0xA9 ,0x28);
-MIPI_SPI_Write(2,  0xAA, 0x31);
-MIPI_SPI_Write(2,  0xAB ,0x39);
-MIPI_SPI_Write(2,  0xAC ,0x39);
-MIPI_SPI_Write(2,  0xAD, 0x31);
-MIPI_SPI_Write(2,  0xAE, 0x2e);
-MIPI_SPI_Write(2,  0xAF ,0x2f);
-MIPI_SPI_Write(2,  0xB0 ,0x3c);
-//#Page1 for NEG gamma correction
-MIPI_SPI_Write(4,  0xFF ,0x61, 0x36, 0x01);
-MIPI_SPI_Write(2,  0xC0 ,0x05);
-MIPI_SPI_Write(2,  0xC1, 0x05);
-MIPI_SPI_Write(2,  0xC2, 0x06);
-MIPI_SPI_Write(2,  0xC3, 0x0d);
-MIPI_SPI_Write(2,  0xC4, 0x04);
-MIPI_SPI_Write(2,  0xC5 ,0x07);
-MIPI_SPI_Write(2,  0xC6, 0x0f);
-MIPI_SPI_Write(2,  0xC7, 0x14);
-MIPI_SPI_Write(2,  0xC8, 0x1f);
-MIPI_SPI_Write(2,  0xC9 ,0x28);
-MIPI_SPI_Write(2,  0xCA, 0x31);
-MIPI_SPI_Write(2,  0xCB ,0x39);
-MIPI_SPI_Write(2,  0xCC ,0x39);
-MIPI_SPI_Write(2,  0xCD, 0x31);
-MIPI_SPI_Write(2,  0xCE, 0x2e);
-MIPI_SPI_Write(2,  0xCF, 0x2f);
-MIPI_SPI_Write(2,  0xD0, 0x3c);
-
-//#Source_Out Performnace Enhancement
-MIPI_SPI_Write(4,  0xFF ,0x61 ,0x36, 0x08); 
-MIPI_SPI_Write(2,  0xE9, 0x0B);
-
-MIPI_SPI_Write(4,  0xFF ,0x61, 0x36, 0x06); 
-MIPI_SPI_Write(2,  0x72, 0x01);
-
-//#VGH Voltage change to 16.75V
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x08); 
-MIPI_SPI_Write(2,  0x93, 0x08);
-
-//#VGL Voltage change to -11.16V
-MIPI_SPI_Write(2,  0x8E, 0x12);
-
-//#VGH pump ratio
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x08); 
-MIPI_SPI_Write(2,  0x76, 0xB4);
-
-//#VGL pump ratio
-MIPI_SPI_Write(2,  0x78 ,0x02);
-
-//# VGH / VGL pump CLK
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x01); 
-MIPI_SPI_Write(2,  0x42, 0x43); 
-
-//#sdt correction
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36, 0x01); 
-MIPI_SPI_Write(2,  0x60 ,0x14);
-
-//#GIP correction CLK Falling
-MIPI_SPI_Write(4,  0xFF ,0x61, 0x36, 0x07); 
-MIPI_SPI_Write(2 , 0x1A, 0x05);
-
-//#GIP correction CLK Rising
-MIPI_SPI_Write(4,  0xFF ,0x61 ,0x36, 0x07); 
-MIPI_SPI_Write(2,  0x16, 0x1F);
-
-//#GIP correction CLK Rising
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36 ,0x07); 
-MIPI_SPI_Write(2,  0x17, 0x1F);
-
-//#GIP Rising 
-MIPI_SPI_Write(4 , 0xFF ,0x61 ,0x36, 0x07); 
-MIPI_SPI_Write(2, 0x18, 0x05);
-
-//#GIP falling 
-MIPI_SPI_Write(4 , 0xFF, 0x61 ,0x36, 0x07 );
-MIPI_SPI_Write(2,  0x19 ,0x00);
-
-//#GIP correction STV Falling
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36 ,0x07 );
-MIPI_SPI_Write(2 , 0x0D ,0x05);
-
-//#GIP correction STV Rising
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x07 );
-MIPI_SPI_Write(2 , 0x0A,0x03);
-
-//#GIP correction RST Falling
-MIPI_SPI_Write(4,  0xFF ,0x61, 0x36, 0x07); 
-MIPI_SPI_Write(2,  0x0E, 0x35);
-
-//#GIP correction RST Rising
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36, 0x07 );
-MIPI_SPI_Write(3 , 0x0B, 0x1F);
-
-//####GIP correction STV width
-MIPI_SPI_Write(4,  0xFF ,0x61, 0x36 ,0x07);
-MIPI_SPI_Write(2 , 0x1C, 0xEB);
-
-
-
-//#??GIP ??VGOFF??? 
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x08);             
-MIPI_SPI_Write(2,  0x6C, 0x02);	
-MIPI_SPI_Write(2,  0x5F, 0x0F);	 
-MIPI_SPI_Write(2 , 0xAB, 0x24);
-
-
-//#Sleep out & TE enable
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36, 0x00);
-MIPI_SPI_Write(2 , 0x35 ,0x01);
-DelayMs(20);
-MIPI_SPI_Write(2,0x11,0x00);
-DelayMs(150);
-
-//#Display on
-MIPI_SPI_Write(2,0x29,0x00);
-DelayMs(150);
-
-//mipi.video.enable 
-
-//#-------------------------------------------------------------------------------
-//# Send Image data
-//#-------------------------------------------------------------------------------
-//image.display 1
-
-}
-void SSD2828_inition_lcd_Check(void)    //IC³õÊ¼»¯
-{
-//#===============================================================================
-//#  Main LDI Power ON Sequence
-//#===============================================================================
-
-//#Page8 for Blanking OSC*2 
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x08);    
-MIPI_SPI_Write(2,  0x1C, 0xA0);
-
-//# 53H for Vcom correction, # 50H for Vreg1, # 51H for Vreg2
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36, 0x01);
-
-MIPI_SPI_Write(2,  0x50, 0x85);
-MIPI_SPI_Write(2,  0x51 ,0x85);
-
-//#Page1 for POS gamma correction
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x01);
-MIPI_SPI_Write(2,  0xA0, 0x05);
-MIPI_SPI_Write(2,  0xA1, 0x05);
-MIPI_SPI_Write(2,  0xA2, 0x06);
-MIPI_SPI_Write(2,  0xA3, 0x0d);
-MIPI_SPI_Write(2 , 0xA4, 0x04);
-MIPI_SPI_Write(2,  0xA5, 0x07);
-MIPI_SPI_Write(2 , 0xA6, 0x0f);
-MIPI_SPI_Write(2,  0xA7, 0x14);
-MIPI_SPI_Write(2 , 0xA8, 0x1F);
-MIPI_SPI_Write(2 , 0xA9, 0x28);
-MIPI_SPI_Write(2 , 0xAA, 0x31);
-MIPI_SPI_Write(2,  0xAB, 0x39);
-MIPI_SPI_Write(2,  0xAC, 0x39);
-MIPI_SPI_Write(2,  0xAD, 0x31);
-MIPI_SPI_Write(2,  0xAE, 0x2e);
-MIPI_SPI_Write(2,  0xAF, 0x2f);
-MIPI_SPI_Write(2,  0xB0, 0x3c);
-//#Page1 for NEG gamma correction
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36, 0x01);
-MIPI_SPI_Write(2,  0xC0, 0x05);
-MIPI_SPI_Write(2,  0xC1, 0x05);
-MIPI_SPI_Write(2,  0xC2, 0x06);
-MIPI_SPI_Write(2,  0xC3, 0x0d);
-MIPI_SPI_Write(2,  0xC4, 0x04);
-MIPI_SPI_Write(2,  0xC5, 0x07);
-MIPI_SPI_Write(2,  0xC6, 0x0f);
-MIPI_SPI_Write(2,  0xC7, 0x14);
-MIPI_SPI_Write(2,  0xC8, 0x1f);
-MIPI_SPI_Write(2,  0xC9, 0x28);
-MIPI_SPI_Write(2,  0xCA, 0x31);
-MIPI_SPI_Write(2,  0xCB, 0x39);
-MIPI_SPI_Write(2 , 0xCC, 0x39);
-MIPI_SPI_Write(2,  0xCD, 0x31);
-MIPI_SPI_Write(2,  0xCE, 0x2e);
-MIPI_SPI_Write(2,  0xCF, 0x2f);
-MIPI_SPI_Write(2,  0xD0, 0x3c);
-
-//#Source_Out Performnace Enhancement
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x08); 
-MIPI_SPI_Write(2,  0xE9, 0x0B);
-
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x06 );
-MIPI_SPI_Write(2,  0x72, 0x01);
-
-//#VGH Voltage change to 16.75V
-MIPI_SPI_Write(4,  0xFF ,0x61, 0x36, 0x08); 
-MIPI_SPI_Write(2,  0x93, 0x08);
-
-//#VGL Voltage change to -11.16V
-MIPI_SPI_Write(2,  0x8E, 0x12);
-
-
-//#VGH pump ratio
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36 ,0x08 );
-MIPI_SPI_Write(2,  0x76, 0xB4);
-//#VGL pump ratio
-MIPI_SPI_Write(2,  0x78, 0x02);
-
-//# VGH / VGL pump CLK
-MIPI_SPI_Write(4,  0xFF ,0x61, 0x36, 0x01 );
-MIPI_SPI_Write(2,  0x42, 0x43 );
-
-//#sdt correction
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36, 0x01); 
-MIPI_SPI_Write(2,  0x60, 0x14);
-
-//#??GIP ??VGOFF??? 
-MIPI_SPI_Write(4,  0xFF, 0x61 ,0x36, 0x08 );            
-MIPI_SPI_Write(2,  0x6C, 0x02 );	
-MIPI_SPI_Write(2,  0x5F, 0x0F	); 
-MIPI_SPI_Write(2,  0xAB, 0x24);
-
-
-//#Sleep out & TE enable
-MIPI_SPI_Write(4,  0xFF, 0x61, 0x36, 0x00);
-MIPI_SPI_Write(2,  0x35, 0x01);
-DelayMs(20);
-MIPI_SPI_Write(2,  0x11, 0x00);
-
-DelayMs(150);
-
-//#Display on
-MIPI_SPI_Write(2,  0x29, 0x00);
-DelayMs(150);
-	
-	
-}
-void Forward_scan(void)           //ÕýÉ¨
-{;}
-void Backward_scan(void)          //·´É¨
-{;}	
-/*******************************************************************************
-* Function Name  : void MTP(void)
-* Description    : otp -> vcom     //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/  
-void MTP(void)
-{	
-//#===============================================================================
-//#  Main LDI Power ON Sequence
-//#===============================================================================
-
-MIPI_SPI_Write( 1, 0x11);                    
-Delay(120);
-
-//#Set Program OTP Address and Data
-MIPI_SPI_Write(4, 0xFF, 0x61, 0x36, 0x01); 
-
-//#Supply Extemal 7.5V to VPP
-//gpio.write 0x44
-VOTP_ADJ_SET(775);			
-VOTP_EN(1);
-	
-Delay(380);
-
-//#=============Vcom E0============
-MIPI_SPI_Write( 2, 0xE0, VCOMDC1);        //ÕýÉ¨VCOM
-MIPI_SPI_Write( 2, 0xE1, 0x05);        //·´É¨VCOM
-MIPI_SPI_Write( 2, 0xE2, 0x00);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-Delay(50);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-//#=========Internal VGH/VGL(4C)========
-MIPI_SPI_Write( 2, 0xE0, 0x00 );  
-MIPI_SPI_Write( 2, 0xE1, 0xF4);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-//#======GIP correction CLK Falling=======
-MIPI_SPI_Write( 2, 0xE0, 0x05 );	  
-MIPI_SPI_Write( 2, 0xE1, 0x42);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-//#======GIP correction CLK Rising======= 
-MIPI_SPI_Write( 2, 0xE0, 0x1F);   
-MIPI_SPI_Write( 2, 0xE1, 0x3E);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-//#=====page7, 17h=1Fh ======
-MIPI_SPI_Write( 2, 0xE0, 0x1F); 
-MIPI_SPI_Write( 2, 0xE1, 0x3F);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-
-//#======GIP correction STV Falling======= 
-MIPI_SPI_Write( 2, 0xE0, 0x05);   
-MIPI_SPI_Write( 2, 0xE1, 0x35);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-//#======GIP correction STV Rising=======
-MIPI_SPI_Write( 2, 0xE0, 0x03 );  
-MIPI_SPI_Write( 2, 0xE1, 0x32);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-//#======GIP correction RST Falling======
-MIPI_SPI_Write( 2, 0xE0, 0x35 );  
-MIPI_SPI_Write( 2, 0xE1, 0x36);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-//#======GIP correction RST Rising======
-MIPI_SPI_Write( 2, 0xE0, 0x1F);   
-MIPI_SPI_Write( 2, 0xE1, 0x33);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-//#======GIP STV width ======
-MIPI_SPI_Write( 2, 0xE0, 0xEB);   
-MIPI_SPI_Write( 2, 0xE1, 0x44);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4 ,0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-
-
-//#======GIP Rising(18)======
-MIPI_SPI_Write( 2, 0xE0 ,0x05 );  
-MIPI_SPI_Write( 2, 0xE1, 0x40);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4, 0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-DelayMs(20);
-
-//#======GIP Rising(19)======
-MIPI_SPI_Write( 2, 0xE0, 0x00 );  
-MIPI_SPI_Write( 2, 0xE1, 0x41);
-MIPI_SPI_Write( 2, 0xE2, 0x01);
-
-//#Step 3 : Enable OTP Program Key
-MIPI_SPI_Write( 2, 0xE3, 0x55);
-MIPI_SPI_Write( 2, 0xE4 ,0xAA);
-MIPI_SPI_Write( 2, 0xE5, 0x66);
-
-//#sleep out
-MIPI_SPI_Write( 1, 0x11);
-
-DelayMs(20);
-//#Cut off 7.5V to VPP
-//gpio.write 0x04
-VOTP_ADJ_SET(330);			  //¹Ø±ÕÍâ²¿OTPµçÑ¹
-VOTP_EN(0);
-
-DelayMs(100);
-
-//#Reset IC
-//gpio.write 0x00		
-//MDelay(10);					
-//gpio.write 0x04
-//MDelay(10);
-
-//#Power off 
-//board.power.off vio
-//board.power.off vdd
-//board.power.off led  	
-}
-
-/*******************************************************************************
-* Function Name  : void MTP_ID(void)
-* Description    : otp -> ID       //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/  
-
-void MTP_ID(void)
-{	;	}	
-#endif
-
-#ifdef HD720x1280
-//////mipi video mode setting
-u16 value_HighSpeed = 480;
-u16 value_Lane_select = 2;
-
-u16  VDP= 1280;      
-u16  VBP= 11 ;    //
-u16  VFP= 6 ;    //
-
-u16  HDP= 720;     
-u16  HBP= 88;     //	
-u16  HFP= 84;     //	
-
-u16	 HPW=8;  //Í¨³£²»ÐèÒªµ÷Õû
-
-u16	 VPW=4;  //Í¨³£²»ÐèÒªµ÷Õû
-	
-/////////////CLAN050LQ  USE    inition/////
-u8 PIC_NUM=14;       //ëŠœy®‹Ãæ×ÜÊý
-u8 Flicker_OTP=3;    //OTP flicker ®‹Ãæ¾ŽÌ–
-u8 Flicker_OQC=2;    //QC flicker  ®‹Ãæ¾ŽÌ–
-//-------------------------------------------------------------------
-//vcom½×´ÎÉè¶¨·½Ê½
-void VCOM_set(u8 vcom)
-{;}   
-//IDÖµÉè¶¨·½Ê½
-void ID_set(void)
-{;}		
-void SSD2828_inition_lcd(void)    //IC³õÊ¼»¯
-{;}
-void Forward_scan(void)           //ÕýÉ¨
-{;}
-void Backward_scan(void)          //·´É¨
-{;}	
-/*******************************************************************************
-* Function Name  : void MTP(void)
-* Description    : otp -> vcom     //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/  
-void MTP(void)
-{	;	}
-
-/*******************************************************************************
-* Function Name  : void MTP_ID(void)
-* Description    : otp -> ID       //´ËÌŽÐè¸ù“þ²»Í¬ÐÍÌ–ßMÐÐOTPÁ÷³ÌÐÞ¸Ä
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/  
-
-void MTP_ID(void)
-{	;	}
-	
-#endif
-
 #ifdef FHD1080x1920
 //////mipi video mode setting
 u16 value_HighSpeed = 480;
@@ -3264,7 +5090,7 @@ LCD_CtrlLinesConfig();		Delay(10);
 	
 	VDDIO_ADJ_SET(185);			  //VDDIO_ADJ_SET ²ÎÊýÈ¡Öµ·¶Î§150~360£¬¶ÔÓ¦µçÑ¹·¶Î§1.5V~3.6V; 
 //	VDDIO_ADJ_EN(1);			  //Ê¹ÄÜVDDIOÊä³ö
-		GPIO_ResetBits(GPIOB, GPIO_Pin_15);  //
+	GPIO_ResetBits(GPIOB, GPIO_Pin_15);  //
 		
 		
 	VOTP_EN(0);	
@@ -3286,8 +5112,8 @@ void STM32_Init_SSD2828(void)
 	u16 cym_KEY; 
 
 	VHPW=(VPW<<8)+HPW;
-	VHBP=((VBP+0)<<8)+(HBP+0);	
-	VHFP=((VFP+0)<<8)+(HFP+0);
+	VHBP=((VBP)<<8)+(HBP);	
+	VHFP=(VFP<<8)+HFP;
 
 	LCD_CtrlLinesConfig();		DelayMs(10);  
 	LCD_RST(0) ;  //Ä¬ÈÏÎª0£¬ÖÃ1ºó»áÓ°ÏìLCD VDD µçÑ¹
@@ -3301,22 +5127,6 @@ void STM32_Init_SSD2828(void)
 	 		 
 	//GPIO_SetBits(GPIOA, GPIO_Pin_1);  //
 	DelayMs(30);             // ³ÌÐò¶à´Î¸´Î»Ê±£¬±£Ö¤¸´Î»Ê±¼ä
-	
-
-//	T226_intion();
-
-
-//	VDD_ADJ_SET(290);			 //VDD_ADJ_SET ²ÎÊýÈ¡Öµ·¶Î§270~620£¬¶ÔÓ¦µçÑ¹·¶Î§2.7V~6.2V; 
-//	VDD_ADJ_EN(1);				 //Ê¹ÄÜVDDÊä³ö
-
-
-//	VDDIO_ADJ_SET(200);			  //VDDIO_ADJ_SET ²ÎÊýÈ¡Öµ·¶Î§150~360£¬¶ÔÓ¦µçÑ¹·¶Î§1.5V~3.6V; 
-//	VDDIO_ADJ_EN(1);			  //Ê¹ÄÜVDDIOÊä³ö
-
-//	VOTP_ADJ_SET(490);			  //VOTP_ADJ_SET ²ÎÊýÈ¡Öµ·¶Î§150~2080£¬¶ÔÓ¦µçÑ¹·¶Î§1.5V~14.1V; 
-//	VOTP_EN(1);					  //Ê¹ÄÜVOTPÊä³ö
-
-//	DelayMs(30); 
 
 	LCD_RST(1); 
 	DelayMs(50);	
@@ -3420,7 +5230,6 @@ void STM32_Init_SSD2828(void)
 	SSD2828_ENTER_LP_mode();
 	DelayMs(5); 
 
-  //-------------------------------------------------------------------
   //-------------------------------------------------------------------	
 
 //	cym_KEY = KEY_AUTO_MODE;
@@ -3446,151 +5255,6 @@ void STM32_Init_SSD2828(void)
 
 }
 
-void Only_STM32_Init_SSD2828(void)
-{ 
-	u16 VHPW,VHBP,VHFP;
-	u16 cym_KEY; 
-
-	VHPW=(VPW<<8)+HPW;
-	VHBP=((VBP)<<8)+(HBP);	
-	VHFP=(VFP<<8)+HFP;
-
-	LCD_CtrlLinesConfig();		DelayMs(10);  
-	LCD_RST(0) ;  //Ä¬ÈÏÎª0£¬ÖÃ1ºó»áÓ°ÏìLCD VDD µçÑ¹
-	DelayMs(20);  
-	//VDD_ADJ_EN(0); //Ä¬ÈÏÎª0£¬ÖÃ1ºó»áÓ°ÏìLCD VDD µçÑ¹
-	SSD2828_SHUT(0);
-	SSD2828_RST(1);
-	SSD2828_CSX0(1);
-	SSD2828_SCL(1);
-	SSD2828_SDI(1);
-	 		 
-	//GPIO_SetBits(GPIOA, GPIO_Pin_1);  //
-	DelayMs(30);             // ³ÌÐò¶à´Î¸´Î»Ê±£¬±£Ö¤¸´Î»Ê±¼ä
-	
-
-//	T226_intion();
-
-
-//	VDD_ADJ_SET(290);			 //VDD_ADJ_SET ²ÎÊýÈ¡Öµ·¶Î§270~620£¬¶ÔÓ¦µçÑ¹·¶Î§2.7V~6.2V; 
-//	VDD_ADJ_EN(1);				 //Ê¹ÄÜVDDÊä³ö
-
-
-//	VDDIO_ADJ_SET(200);			  //VDDIO_ADJ_SET ²ÎÊýÈ¡Öµ·¶Î§150~360£¬¶ÔÓ¦µçÑ¹·¶Î§1.5V~3.6V; 
-//	VDDIO_ADJ_EN(1);			  //Ê¹ÄÜVDDIOÊä³ö
-
-//	VOTP_ADJ_SET(490);			  //VOTP_ADJ_SET ²ÎÊýÈ¡Öµ·¶Î§150~2080£¬¶ÔÓ¦µçÑ¹·¶Î§1.5V~14.1V; 
-//	VOTP_EN(1);					  //Ê¹ÄÜVOTPÊä³ö
-
-//	DelayMs(30); 
-
-	LCD_RST(1); 
-	DelayMs(50);	
-	LCD_RST(0);   SSD2828_RST(0) ; 	DelayMs(50);	      //Ó²¼þ¸´Î»   
-	LCD_RST(1) ;  SSD2828_RST(1);	DelayMs(150);
-
-////=============================¿ª»ú¼ì²âÊÇ·ñ´óµçÁ÷==========================
-//  if(Measure_IDD(mA) > 11000)				////if IDD > 110mA,,,,,power  off
-//	{
-//		BEEP_Dudu();	 /////////beep  on
-//		VDD_ADJ_EN(0);	
-//		VDDIO_ADJ_EN(0);	
-//		VOTP_EN(0);		
-//		BEEP_ON();	 /////////beep  on
-//		while(1);
-//	}		
-//	
-
-//----------------------------check 2828ÊÇ·ñÕý³£º-------------
-
-	while( READ_SSD2828_onebyte(0XB0) != 0x2828)
-		{
-			LCD_RST(0);//Ó²¼þ¸´Î»
-			SSD2828_RST(0) ;
-			DelayMs(50);	
-			LCD_RST(1) ;
-			SSD2828_RST(1);//Ó²¼þ¸´Î»
-			DelayMs(150);
-	
-			STM32TOSSD2828_W_COM(0xc0);
-			STM32TOSSD2828_W_DATA_16BITS(0x0100);		
-			DelayMs(50);
-		}
-
-	{
-		STM32TOSSD2828_W_COM(0xB1);
-		STM32TOSSD2828_W_DATA_16BITS(VHPW);		//Vertical sync and horizontal sync active period 
-
-		STM32TOSSD2828_W_COM(0xB2);
-		STM32TOSSD2828_W_DATA_16BITS(VHBP);		//Vertical and horizontal back porch period 
-
-
-		STM32TOSSD2828_W_COM(0xB3);
-		STM32TOSSD2828_W_DATA_16BITS(VHFP);		//Vertical and horizontal front porch period 
-
-		STM32TOSSD2828_W_COM(0xB4);
-		STM32TOSSD2828_W_DATA_16BITS(HDP);		//Horizontal active period 
-//		X = READ_SSD2828_onebyte(0xB4);
-
-		STM32TOSSD2828_W_COM(0xB5);
-		STM32TOSSD2828_W_DATA_16BITS(VDP);		//Vertical active period 
-//		Y = READ_SSD2828_onebyte(0xB5);
-
-		STM32TOSSD2828_W_COM(0xB6);		//Video mode and video pixel format
-		STM32TOSSD2828_W_DATA_16BITS(0x000B);		//24bit 			   
-
-		STM32TOSSD2828_W_COM(0xDE);		
-		STM32TOSSD2828_W_DATA_16BITS(value_Lane_select-1);		//MIPI lane select  
-
-		STM32TOSSD2828_W_COM(0xd6);	
-		STM32TOSSD2828_W_DATA_16BITS(0x0001);		//Color order and endianess 
-
-		STM32TOSSD2828_W_COM(0xb8);		//VC register 
-		STM32TOSSD2828_W_DATA_16BITS(0x0000);
-
-		STM32TOSSD2828_W_COM(0xb9);		//PLL disable 
-		STM32TOSSD2828_W_DATA_16BITS(0x0000);
-		DelayMs(5);
-
-		data = value_HighSpeed/12;
-
-		if(value_HighSpeed < 125 )
-		{
-			data =  data;	
-		}
-		else if(value_HighSpeed < 250 )
-		{
-			data = 0x4000 + data;	
-		}
-		else  if(value_HighSpeed < 500 )
-		{
-			data = 0x8000 + data;	
-		}
-		else
-		{
-			data = 0xc000 + data;	
-		}
-			
-		STM32TOSSD2828_W_COM(0xba);		//PLL setting 
-		STM32TOSSD2828_W_DATA_16BITS(data);
-
-		STM32TOSSD2828_W_COM(0xbb);		//LP clock divider 
-		STM32TOSSD2828_W_DATA_16BITS(0x0006);			//////8.8MHZ	
-		DelayMs(5);
-
-		STM32TOSSD2828_W_COM(0xb9);		//PLL enable 
-		STM32TOSSD2828_W_DATA_16BITS(0xc001);		//8·ÖÆµ	£¬SYS_CLKÊä³ö24/8=3MHZ
-		DelayMs(5);
-	}
-
-	SSD2828_ENTER_LP_mode();
-	DelayMs(5); 
-  //-------------------------------------------------------------------
-  //-------------------------------------------------------------------	
-	SSD2828_inition_lcd();    //³õÊ¼»¯IC
-	SSD2828_VIDEO_MODE_HS();
-	DelayMs(5);			//	SSD2828_VIDEO_MODE_HS();
-}
 
 void SSD2828_VIDEO_MODE_HS(void)  //²»Í¬·Ö±æÂÊµÄLCDÐèÒª²»Í¬µÄ´«ÊäËÙ¶È£¬Ðè×öÕë¶Ôµ÷Õû
 {	
@@ -3613,7 +5277,7 @@ void SSD2828_VIDEO_MODE_HS(void)  //²»Í¬·Ö±æÂÊµÄLCDÐèÒª²»Í¬µÄ´«ÊäËÙ¶È£¬Ðè×öÕë¶Ôµ
 //	DelayMs(5);
 	
 	STM32TOSSD2828_W_COM(0xb7);		//Generic mode, HS video mode
-    STM32TOSSD2828_W_DATA_16BITS(0x070b);		 //HS video +  short packet 
+	STM32TOSSD2828_W_DATA_16BITS(0x070b);		 //HS video +  short packet 
 	DelayMs(5);
 
 }
@@ -3638,8 +5302,8 @@ void SSD2828_ENTER_LP_mode(void)  //LPÄ£Ê½ËÙ¶ÈÍ¨ÓÃ
 //	STM32TOSSD2828_W_DATA_16BITS(0xc001);		//8·ÖÆµ	£¬SYS_CLKÊä³ö24/8=3MHZ
 //	DelayMs(5);
 
-	STM32TOSSD2828_W_COM(0xb7);		//DCS mode, LP mode 
-    STM32TOSSD2828_W_DATA_16BITS(0x0752);	
+	STM32TOSSD2828_W_COM(0xb7);		//DCS mode, LP mode
+	STM32TOSSD2828_W_DATA_16BITS(0x0752);	 
 	DelayMs(5);
 }
 void SSD2828_ENTER_READ_LCDIC_mode(void)
@@ -3699,10 +5363,10 @@ xxxx1:
 		Value = SSD2825_READ_AnyByte(0xfA);
 		MIPI_READ_DATA[8] = Value;
 		MIPI_READ_DATA[9] = Value>>8;
-
+	
 //		SSD2828_ENTER_LP_mode();
-		SSD2828_VIDEO_MODE_HS();
-		MDelay(100);
+//		SSD2828_VIDEO_MODE_HS();
+//		MDelay(100);
 	}
 	else
 	{
@@ -3712,72 +5376,6 @@ xxxx1:
 	
 	return Value;	
 }
-
-u8 READ_IC_Once(u8 cmd,u8 cmd1)  //¶Á2828´ÓLCD icÖÐÈ¡»ØÀ´µÄÖµ
-{
-	u16 Value=0;
-
-xxxx1:
-	STM32TOSSD2828_W_COM(0xb7);		//enable BTA
-	STM32TOSSD2828_W_DATA_16BITS(0x0382);
-	DelayMs(15);
-	
-	STM32TOSSD2828_W_COM(0xBB);		//enable BTA
-	STM32TOSSD2828_W_DATA_16BITS(0x0005);
-  DelayMs(15);
-	STM32TOSSD2828_W_COM(0xc4);		//enable BTA
-	STM32TOSSD2828_W_DATA_16BITS(0x0001);
-  DelayMs(15);
-	STM32TOSSD2828_W_COM(0xc1);		//Max. return packet is 255 bytes
-	STM32TOSSD2828_W_DATA_16BITS(0x0002);
-  DelayMs(15);
-	STM32TOSSD2828_W_COM(0xc0);
-	STM32TOSSD2828_W_DATA_16BITS(0x0001);
-
-	DelayMs(15);
-
-	TC358768_DCS_write_1A_1P(cmd,cmd1);
-	DelayMs(15);
-
-	STM32TOSSD2828_W_COM(0xd4);
-	STM32TOSSD2828_W_DATA_16BITS(0x00FA);
-	DelayMs(15);
-	if(((READ_SSD2828_onebyte(0xc6))&0x01)==1)
-	{
-		DelayMs(15);
-		Value = READ_SSD2828_onebyte(0xff);	
-		MIPI_READ_DATA[0] = Value;
-		MIPI_READ_DATA[1] = Value>>8;
-
-//		Value = SSD2825_READ_AnyByte(0xfA);
-//		MIPI_READ_DATA[2] = Value;
-//		MIPI_READ_DATA[3] = Value>>8;
-
-//		Value = SSD2825_READ_AnyByte(0xfA);
-//		MIPI_READ_DATA[4] = Value;
-//		MIPI_READ_DATA[5] = Value>>8;
-
-//		Value = SSD2825_READ_AnyByte(0xfA);
-//		MIPI_READ_DATA[6] = Value;
-//		MIPI_READ_DATA[7] = Value>>8;
-//		
-//		Value = SSD2825_READ_AnyByte(0xfA);
-//		MIPI_READ_DATA[8] = Value;
-//		MIPI_READ_DATA[9] = Value>>8;
-
-//		SSD2828_ENTER_LP_mode();
-//		SSD2828_VIDEO_MODE_HS();
-		DelayMs(15);
-	}
-	else
-	{
-		DelayMs(15);
-		goto xxxx1;
-	}
-	
-	return Value;	
-}
-
 
 u8 READ_IC_A(u8 cmd,u8 cmd1)  //¶Á2828´ÓLCD icÖÐÈ¡»ØÀ´µÄÖµ
 {
@@ -4021,7 +5619,9 @@ void enter_sleep_mode(void)
 	STM32TOSSD2828_W_COM(0xbf);
 	STM32TOSSD2828_W_DATA_8BITS(0x10);
 	DelayMs(50);
-//2825 CHANGE MODE  IN SLEEP
+	
+//	
+////2825 CHANGE MODE  IN SLEEP
 	STM32TOSSD2828_W_COM(0xc0);		  //SSD2825 SOFT RESET
 	STM32TOSSD2828_W_DATA_16BITS(0x0100);
 	Delay(20);

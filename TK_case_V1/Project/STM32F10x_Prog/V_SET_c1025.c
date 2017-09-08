@@ -320,7 +320,7 @@ void P557_GPIO_Config(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE);
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
+//	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
 
     ///////////// for M6 use //================================================
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
@@ -543,6 +543,28 @@ bool P557_I2CReceive(BYTE ucDeviceAddr, BYTE ucIndex, BYTE* pucData, unsigned in
         {           bRet = FALSE;           }
       P557_I2CStop();
       return bRet;
+}
+
+//////////////////###############################################################################
+////////////////////VOL 管脚配置
+//////////////////###############################################################################
+void Vol_GPIO_Configuration(void)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA |RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD
+	                                         | RCC_APB2Periph_AFIO, ENABLE); 
+	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);//禁止jtag，以空出PB3,PB4,PA15
+		
+	///*[把GPIOB 对应端口配置成输出模式] */  PB15 for VDDIO EN
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed =GPIO_Speed_2MHz;//GPIO最高速度50MHz
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	///*[把PA 对应端口配置成输出模式] */     PA1 for VDD EN
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_0|GPIO_Pin_1|GPIO_Pin_3|GPIO_Pin_4 ;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//GPIO最高速度50MHz
+	GPIO_Init(GPIOA, &GPIO_InitStructure); 
 }
 
 

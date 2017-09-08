@@ -159,34 +159,32 @@ u16 Measure_IDD(u8 gears)
 	
 	if(gears==uA) //關閉光耦，ua档，加適當延時，供電容放電  }
 		 {	 
-			   GPIO_SetBits(GPIOA, GPIO_Pin_0); 
+			   GPIO_SetBits(GPIOA, GPIO_Pin_0); DelayMs(350);	 
 //			 if(HFZ_COF==0)
 //			 {
-		     times=130;
-		     DelayMs(200);	
+		     times=150;     
 //			 }
 //       else
 //			 times=10;			 
 		 }
  	else { 
-		      GPIO_ResetBits(GPIOA, GPIO_Pin_0);
-		
+		      GPIO_ResetBits(GPIOA, GPIO_Pin_0);DelayMs(350);
+		      
 			    if(HFZ_COF==1)
 			    {
-		        times=130;
-		        DelayMs(200);	
+		        times=150;
+		        DelayMs(250);	
 			    }
          else
 				  {	 
-		       times=12;  
+		       times=40;  
 		      }
 		   } //接通光耦，ma档 }
 
 	for(i=0;i<times;i++)
 		 {	  
-			  DelayMs(2);
+			  DelayMs(5);
     		datax[i]=Measure_IDD_once(gears);
-			  datax[i+1] = 0;		 // DelayMs(2);
 		 }
 	
 	for(i=0;i<times-1;i++)		  //排序
@@ -201,11 +199,11 @@ u16 Measure_IDD(u8 gears)
 					}
 			}
 		}
-	for(i=1;i<times-1;i++)		  //去大小
+	for(i=5;i<times-5;i++)		  //去大小
 		{
 		  sum+=datax[i];
 		}
-		sum/=(times-2);
+		sum/=(times-10);
 		temp=sum;
 		
 		if(temp>0x8000)
@@ -256,17 +254,17 @@ u16 Measure_IDDIO(u8 gears)
 	u32 sum=0;
 	
 	if(gears==uA)
-		   {	GPIO_SetBits(GPIOA, GPIO_Pin_3);times=50;DelayMs(200);   } //關閉光耦，ua档，加適當延時，供電容放電  
+		   {	GPIO_SetBits(GPIOA, GPIO_Pin_3);times=50;DelayMs(350);   } //關閉光耦，ua档，加適當延時，供電容放電  
  	else {	
-		      GPIO_ResetBits(GPIOA, GPIO_Pin_3);
-					if(HFZ_COF==1)
+		      GPIO_ResetBits(GPIOA, GPIO_Pin_3);DelayMs(350);
+					if(HFZ_COF==1)   //校准时
 			    {
-		        times=130;
-		        DelayMs(200);	
+		        times=150;
+		        DelayMs(250);	
 			    }
          else
 				  {	 
-		       times=12;  
+		       times=40;  
 		      }		      
 		   } //接通光耦，ma档 }
 
@@ -288,11 +286,11 @@ u16 Measure_IDDIO(u8 gears)
 							}
 			  }
 		}
-	for(i=1;i<times-1;i++)		  //去大小
+	for(i=5;i<times-5;i++)		  //去大小
 		{
 		  sum+=data[i];
 		}
-		sum/=(times-2);
+		sum/=(times-10);
 		temp=sum;
 		
 		if(temp>0x8000)
@@ -308,7 +306,7 @@ u16 Measure_IDDIO_once(u8 gears)
 	  u16 flagc;
     signed short IDDIO_value=0;
 
-		DelayMs(3);
+		DelayMs(5);
 		T226_I2CReceive(DEVICE_ADDRESS_M12, COMMAND_SHUNT_VLOTAGE_SETTING, pucData, 2);	DelayMs(5); 
 		IDDIO_value=(pucData[0]<<8)+pucData[1];
 
@@ -334,7 +332,6 @@ u8 Measure_I_5TimesForProtectIDDIO(u32 dat1)
 {   u32 flagi=5*	dat1;
     u32 limit=0;
 	GPIO_ResetBits(GPIOA, GPIO_Pin_3);  //接通光耦，ma档 
-//#ifdef	MIPI_YELLOW_BOARD 
   limit= Measure_IDDIO_once(mA);
 	limit+= Measure_IDDIO_once(mA);
 	limit+= Measure_IDDIO_once(mA);
@@ -347,9 +344,9 @@ u8 Measure_I_5TimesForProtectIDDIO(u32 dat1)
 	  VOTP_EN(0);	
 	 return 1;	
 	}
-//#endif 
 	else return 0;
 }
+
 u8 Measure_I_5TimesForProtectIDD(u32 dat2)
 {   u32 flagi=5*	dat2;
     u32 limit=0;
@@ -424,9 +421,7 @@ void AUTO_CALIBRATION(void)
 		 {
 			 vdd_vol++; 
        VDD_ADJ_SET(vdd_vol);					
-	     VDD_ADJ_EN(1); 
-//       while(mm_KEY_UP==0)
-//	     {mm_KEY_UP=KEY_UP;}  	 
+	     VDD_ADJ_EN(1);  
 		 }
 		 
      mm_KEY_DOWN=KEY_DOWN;
@@ -435,8 +430,6 @@ void AUTO_CALIBRATION(void)
 			 vdd_vol--; 
        VDD_ADJ_SET(vdd_vol);					
 	     VDD_ADJ_EN(1); 
-//       while(mm_KEY_DOWN==0)
-//	     {mm_KEY_DOWN=KEY_DOWN;}  	 
 		 } 		 
 		 mm_KEY_PAUSE=KEY_PAUSE;   
 	 }while((mm_KEY_PAUSE!=0));	 
@@ -447,12 +440,6 @@ void AUTO_CALIBRATION(void)
 			mm_KEY_PAUSE=KEY_PAUSE;
 		} 
 		
-//    for(coco=0;coco<8;coco++)
-//    {
-//			 little_value=Measure_IDD(uA);
-//			 if(little_value>Preset1)
-//			 {Preset1=little_value;}	 	   
-//		}	
 		PA910SPISendValueofCurrent("-^-Preset1-^-:",Preset1);	
 	  BEEP_BIBI();
    		
@@ -474,17 +461,13 @@ void AUTO_CALIBRATION(void)
 			 {
 				 VDD_ADJ_SET(++vdd_vol);	  				
 				 VDD_ADJ_EN(1);
-//				 while(mm_KEY_UP==0)
-//				 {mm_KEY_UP=KEY_UP;}  	 
 			 }
 		 
        mm_KEY_DOWN=KEY_DOWN;
 			 if( mm_KEY_DOWN==0)
 			 {
 				 VDD_ADJ_SET(--vdd_vol);					
-				 VDD_ADJ_EN(1); 
-//				 while(mm_KEY_DOWN==0)
-//				 {mm_KEY_DOWN=KEY_DOWN;}  	 
+				 VDD_ADJ_EN(1);  
 			 } 		 
 		 mm_KEY_PAUSE=KEY_PAUSE;   
 	  }while((mm_KEY_PAUSE!=0));	 	
@@ -494,12 +477,6 @@ void AUTO_CALIBRATION(void)
 			mm_KEY_PAUSE=KEY_PAUSE;
 		}  
 //--------------------------------------//	
-//		for(coco=0;coco<8;coco++)
-//    {
-//			 little_value=Measure_IDD(uA);
-//			 if(little_value>Preset2)
-//			 {Preset2=little_value;}	 	
-//		}	
     PA910SPISendValueofCurrent("-^-Preset2-^-:",Preset2);
 		
     decom_a=(u16)((abs(Preset2-Preset1)*1000)/(50-30));
@@ -541,8 +518,8 @@ void AUTO_CALIBRATION(void)
 	 
 /*******************************************************************/	
 /*配置,mA档,IDD路*/	
-//    GPIO_SetBits(GPIOB, GPIO_Pin_9); //将300K短起  ,mA档
-	  RELAY_EN(1); 
+
+	  RELAY_EN(1); //将300K短起  ,mA档
 		DelayMs(150);
     VOTP_ADJ_SET(390);			  
     VOTP_EN(0); //IDD路
@@ -562,8 +539,6 @@ void AUTO_CALIBRATION(void)
 		 {
        VDD_ADJ_SET(++vdd_vol);					
 	     VDD_ADJ_EN(1);
-//       while(mm_KEY_UP==0)
-//	     {mm_KEY_UP=KEY_UP;}  	 
 		 }
 		 
      mm_KEY_DOWN=KEY_DOWN;
@@ -571,27 +546,17 @@ void AUTO_CALIBRATION(void)
 		 {
        VDD_ADJ_SET(--vdd_vol);					
 	     VDD_ADJ_EN(1);  
-//       while(mm_KEY_DOWN==0)
-//	     {mm_KEY_DOWN=KEY_DOWN;}  	 
 		 } 
 //--------------------------------------//		
 		 mm_KEY_PAUSE=KEY_PAUSE;  
 		//将数据发送至串口 
 	 }while((mm_KEY_PAUSE!=0));   
-
-	 
+ 
 ///////////////////////==========key——pass==========			 
     while(mm_KEY_PAUSE==0)
 	  {
 			mm_KEY_PAUSE=KEY_PAUSE;
 		} 
-    
-//		for(coco=0;coco<8;coco++)
-//    {
-//			 little_value=Measure_IDD(mA);
-//			 if(little_value>Preset1)
-//			 {Preset1=little_value;}	 	   
-//		}	
      decom_a=(u16)(5000000/(Preset1));            //50MA
 		
 ///////////////////////============24c02存储区======		
@@ -664,9 +629,9 @@ void AUTO_CALIBRATION(void)
 //	 BEEP_BIBI();  
 	 
 /*******************************************************************/	
-/*配置,MA档,IDDIO路*/	
-//		GPIO_SetBits(GPIOB, GPIO_Pin_9); 	//mA档
-		RELAY_EN(1);
+/*配置,uA档,IDDIO路*/	
+
+		RELAY_EN(1);	//mA档
 		DelayMs(150);
     VOTP_ADJ_SET(390);			  
     VOTP_EN(1);   //IDDIO路
@@ -686,8 +651,7 @@ void AUTO_CALIBRATION(void)
 			 vddio_vol+=5; 
 	     VDDIO_ADJ_SET(vddio_vol);			 
 	     VDDIO_ADJ_EN(1);			 
-		 }
-		 
+		 }	 
      mm_KEY_DOWN=KEY_DOWN;
 		 if( mm_KEY_DOWN==0)
 		 {
@@ -704,13 +668,7 @@ void AUTO_CALIBRATION(void)
 	 {
 		 mm_KEY_PAUSE=KEY_PAUSE;
 	 } 	
-	 
-//    for(coco=0;coco<8;coco++)
-//    {
-//			 little_value=Measure_IDDIO(mA);
-//			 if(little_value>Preset1)
-//			 {Preset1=little_value;}	 	   
-//		}	
+
     decom_a=(u16)(5000000/Preset1);            // IO IDD 50MA
   
 //////////////////////==========key——pass==========			
@@ -915,10 +873,15 @@ void EEpromRead_CurrentCalibration(void)
 
 
 //---------------------------------------------------------  测量待机电流
-void SLEEP_CAL_TEST(void)
+void SLEEP_CAL_TEST(unsigned short idd_sleep_val,unsigned short iddio_sleep_val)
 {
+	unsigned short idd_sleep,iddio_sleep;
+	
+	idd_sleep=idd_sleep_val;
+	iddio_sleep=iddio_sleep_val;
+	
 	IDDCurrentOfSleep=Measure_IDD(uA);
-	if(IDDCurrentOfSleep> IDD_SLEEP_LIMIT_VALUE)
+	if(IDDCurrentOfSleep> idd_sleep)
 	{
 		exit_sleep_mode();                            DelayMs(150);  
 		Allcolor(1,0xffffff);		                      DelayMs(150);//刷白
@@ -931,7 +894,7 @@ void SLEEP_CAL_TEST(void)
 
 	IDDIOCurrentOfSleep=Measure_IDDIO(uA);
 	FlagOfCurrentSleep=1;
-	if(IDDIOCurrentOfSleep > IOIDD_SLEEP_LIMIT_VALUE)
+	if(IDDIOCurrentOfSleep > iddio_sleep)
 	{
 		
 		exit_sleep_mode();                            DelayMs(150);  
@@ -945,11 +908,16 @@ void SLEEP_CAL_TEST(void)
 }
 
 //---------------------------------------------------------  测量工作电流
-void NORML_CAL_TEST(void)
+void NORML_CAL_TEST(unsigned short idd_norml_val,unsigned short iddio_norml_val)
 {   
+	 	unsigned short idd_norml,iddio_norml;
 	  u16 chenf;
+		idd_norml=idd_norml_val;
+		iddio_norml=iddio_norml_val;
+	
+	  
 	  chenf=Measure_IDD(mA);
-		if(chenf > IDD_WORK_LIMIT_VALUE)
+		if(chenf > idd_norml)
 		{
 			Allcolor(1,0xffffff);		                                        DelayMs(150);//刷白
 		  ShowTxt("38,20,149,IDD:(mA)");	  				                      DelayMs(150);
@@ -960,7 +928,7 @@ void NORML_CAL_TEST(void)
 		}	
 	  
 		chenf=Measure_IDDIO(mA);
-		if(chenf > IOIDD_WORK_LIMIT_VALUE)
+		if(chenf > iddio_norml)
 		{
 			Allcolor(1,0xffffff);		     DelayMs(150);//刷白
 		  ShowTxt("38,20,149,IDDIO:(mA)");	  				                    DelayMs(150);
@@ -969,6 +937,39 @@ void NORML_CAL_TEST(void)
       while(1)			
 			{BEEP_Dudu();}
 		}
+}
+
+/*********************************************************************************************************
+*   上电初大电流检测函数
+*   //--若此时电流超过20000/100=200ma则认为电源短路，切断电源，蜂鸣器一长2短鸣叫，同时背光闪烁		
+*********************************************************************************************************/	
+void POWER_ON_CHECK(void)
+{
+	u8 CurrentRetryflag=0;
+
+	while (Measure_I_5TimesForProtectIDD(20000)|	Measure_I_5TimesForProtectIDDIO(20000))	
+    {	
+			BEEP_ON();DelayMs(500);BEEP_BIBI();//	BEEP_ON();DelayMs(1000);BEEP_BIBI();
+			BACK_LIGHT_OFF();DelayMs(300);BACK_LIGHT_ON();DelayMs(300);	BACK_LIGHT_OFF();DelayMs(300);BACK_LIGHT_ON();
+      if( CurrentRetryflag==0)  //防止连续开机误大电流报警
+			{LCD_Vol_SET();CurrentRetryflag++;}
+      else {
+             while  (1)
+					   {BACK_LIGHT_OFF();DelayMs(30);BACK_LIGHT_ON();DelayMs(30);}
+           }			
+    }		
+}
+/*********************************************************************************************************
+*   OTP完毕之后持绪检测防止大电流
+*   //--若此时电流超过20000/100=200ma则认为电源短路，切断电源，蜂鸣器一长2短鸣叫，同时背光闪烁		
+*********************************************************************************************************/	
+void END_OFF_CHECK(void)
+{
+	while(1)
+	{
+   Measure_I_5TimesForProtectIDD(20000);
+	 Measure_I_5TimesForProtectIDDIO(20000);
+	}
 }
 
 void PA910SPISendValueofCurrent(char *p,u32 datcf)

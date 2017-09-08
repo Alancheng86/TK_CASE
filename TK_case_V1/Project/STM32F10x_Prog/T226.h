@@ -79,7 +79,8 @@ bool T226_I2CReceive(BYTE ucDeviceAddr, BYTE ucIndex, BYTE* pucData, unsigned in
 unsigned int M9_BUS_VOLTAGE(void);
 unsigned int M12_BUS_VOLTAGE(void);
 void T226_intion(void);
-
+void POWER_ON_CHECK(void);   //上电初大电流检测
+void END_OFF_CHECK(void);
 
 void USART_SEND_DEC(u16 data);
 void PA910SPISendValueofCurrent(char *p,u32 datcf);
@@ -102,8 +103,10 @@ void STORE_CALIBRATION(void);
 void AUTO_CALIBRATION(void);
 void GET_PRESENT(void);
 
-void NORML_CAL_TEST(void);
-void SLEEP_CAL_TEST(void);
+
+//2015.6.4
+void NORML_CAL_TEST(unsigned short idd_norml_val,unsigned short iddio_norml_val);
+void SLEEP_CAL_TEST(unsigned short idd_sleep_val,unsigned short iddio_sleep_val);
 //-----------------------------------------------------------------------
 #endif
 

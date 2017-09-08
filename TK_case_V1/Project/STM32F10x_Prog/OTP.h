@@ -46,17 +46,25 @@ void OTP_ERROR_1(void);
 void OTP_ERROR_2(void);
 void OTP_ERROR_3(void);
 void OTP_ERROR_4(void);
+
+
 void OTP_ID_OK(void);
 void OTP_ID_NG(void);
+void Gamma_OK(void);
+void Gamma_NG(void);
+
 void OTP_adjust_result(u16 senser_val);
+void Running_water_result();
 
 
+u8 Gamma_Check(void);
+void Gamma_READ(void);
+u8 VCOM_TIMES_Check(void);
 void VCOM_CHECK(u8 vcom); 
+void VCOM_READ(void);
+void ID_READ(void);
 u8 ID_CHECK(void);
-u8 VCOM_TIMES_Check(u8 reg);
-u8 Only_check_id(void);
-void CHECK_ID_again(void);
-void Flicker_for_Stable(u8 hfz_vocm);
+
 void KEY_adjust(void);
 
 /* Exported types ------------------------------------------------------------*/

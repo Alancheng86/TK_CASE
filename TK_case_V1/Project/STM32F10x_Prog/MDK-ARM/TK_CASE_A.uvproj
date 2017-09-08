@@ -46,7 +46,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\STM3210E-LCD_XL\</OutputDirectory>
-          <OutputName>052WA51_FT8006M</OutputName>
+          <OutputName>060WA42_TK_V6_gammcheck</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -172,11 +172,11 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4098</DriverSelection>
+            <DriverSelection>4099</DriverSelection>
           </Flash1>
-          <bUseTDR>1</bUseTDR>
+          <bUseTDR>0</bUseTDR>
           <Flash2>Segger\JL2CM3.dll</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -514,9 +514,19 @@
               <FilePath>..\tsliic_rev_c.lib</FilePath>
             </File>
             <File>
-              <FileName>V_SET_c1025.c</FileName>
+              <FileName>IICS.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\V_SET_c1025.c</FilePath>
+              <FilePath>..\IICS.c</FilePath>
+            </File>
+            <File>
+              <FileName>STORE.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STORE.c</FilePath>
+            </File>
+            <File>
+              <FileName>M2481_Control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\M2481_Control.c</FilePath>
             </File>
             <File>
               <FileName>E24C16IIC.c</FileName>
@@ -524,9 +534,24 @@
               <FilePath>..\E24C16IIC.c</FilePath>
             </File>
             <File>
+              <FileName>V_SET_c1025.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\V_SET_c1025.c</FilePath>
+            </File>
+            <File>
               <FileName>T226_1022.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\T226_1022.c</FilePath>
+            </File>
+            <File>
+              <FileName>TSLIIC_Brightness.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\TSLIIC_Brightness.c</FilePath>
+            </File>
+            <File>
+              <FileName>TSLIIC_REV01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\TSLIIC_REV01.c</FilePath>
             </File>
           </Files>
         </Group>

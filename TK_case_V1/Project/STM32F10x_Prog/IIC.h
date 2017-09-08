@@ -24,7 +24,9 @@
 void EEPROM_GPIO_Config(void);
 //----------For  24lc64------------------
 unsigned char EEPROMBYTE_Write(unsigned int addr,unsigned char regdata);
+unsigned char EEPROMBYTE_Write_Flex(unsigned int slave,unsigned int addr,unsigned char regdata);
 unsigned char EEPROMBYTE_Read(unsigned int addr);
+unsigned char EEPROMBYTE_Read_Flex(unsigned int slave,unsigned int addr);
 unsigned char EEPROMfloat_Write(unsigned int addr,float gdata);
 float EEPROMfloat_Read(unsigned int addr);
 
