@@ -42,7 +42,7 @@ u8 ID1_VALUE = 0X53;
 u8 ID2_VALUE = 0X44;
 u8 ID3_VALUE = 0X90;
 
-u8 VCOM_register=0x01;   //设置vcom寄存器地址
+u8 VCOM_register=0x80;   //设置vcom寄存器地址
 u8 VCOM_Read_reg=0x02;   //读取vcom寄存器地址
 
 
@@ -312,13 +312,13 @@ u8 ID_CHECK(void)
 //	ID3_READ =   MIPI_READ_DATA[0];
 //  MIPI_SPI_Write( 4,  0xFF, 0x61, 0x36, 0x01);  //该型号回读之前需切换page
 	
-    MIPI_SPI_Write( 2,  0xE0, 0x01);  //该型号回读之前需切换page
+    MIPI_SPI_Write( 2,  0x51, 0x03);  //该型号回读之前需切换page
     
-     MIPI_SPI_Write( 2,  0x00, 0x00); 
+//     MIPI_SPI_Write( 2,  0x00, 0x00); 
     READ_IC(VCOM_register,0x00);   //回读ID3值
 	OTP_VALUE1 =   MIPI_READ_DATA[0];
 	OTP_VALUE2 =   MIPI_READ_DATA[1];
-	VCOM_TIMES_Check(VCOM_Read_reg);
+//	VCOM_TIMES_Check(VCOM_Read_reg);
 //-----------------------------------------------------------------------------------	
 //	READ_IC(ID_register,  0x00);   //回读ID值
 	SSD2828_VIDEO_MODE_HS();		  DelayMs(150);
@@ -751,15 +751,15 @@ void KEY_adjust(void)
 		if(mm_KEYB10 == 0)
 		{
 			VCOMDH++;
-			STM32TOSSD2828_W_COM(0xb7);		//DCS mode, LP mode
-			STM32TOSSD2828_W_DATA_16BITS(0x0750);	 
+//			STM32TOSSD2828_W_COM(0xb7);		//DCS mode, LP mode
+//			STM32TOSSD2828_W_DATA_16BITS(0x0750);	 
 			Delay(5);
 	    
       VCOM_set(VCOMDH);
 		  Delay(15);
 
-			STM32TOSSD2828_W_COM(0xb7);		//Generic mode, HS video mode
-			STM32TOSSD2828_W_DATA_16BITS(0x070B);
+//			STM32TOSSD2828_W_COM(0xb7);		//Generic mode, HS video mode
+//			STM32TOSSD2828_W_DATA_16BITS(0x070B);
 			Delay(50);
 			showbmp (Flicker_OTP);				DelayMs(150); 	   //////Flicker_OTP專用
 			ShowData_hex("32,100,400",VCOMDH) ;	  DelayMs(150);
@@ -767,15 +767,15 @@ void KEY_adjust(void)
 		if(mm_KEYB11 == 0)
 		{
 			VCOMDH--;
-			STM32TOSSD2828_W_COM(0xb7);		//DCS mode, LP mode
-			STM32TOSSD2828_W_DATA_16BITS(0x0750);	 
+//			STM32TOSSD2828_W_COM(0xb7);		//DCS mode, LP mode
+//			STM32TOSSD2828_W_DATA_16BITS(0x0750);	 
 			Delay(5);
 	    	
 			VCOM_set(VCOMDH);	         
 		  Delay(15);
 			
-			STM32TOSSD2828_W_COM(0xb7);		//Generic mode, HS video mode
-			STM32TOSSD2828_W_DATA_16BITS(0x070B);
+//			STM32TOSSD2828_W_COM(0xb7);		//Generic mode, HS video mode
+//			STM32TOSSD2828_W_DATA_16BITS(0x070B);
 			Delay(50);
 			showbmp (Flicker_OTP);				DelayMs(150); 	   //////Flicker_OTP專用
 			ShowData_hex("32,100,400",VCOMDH) ;	  DelayMs(150);

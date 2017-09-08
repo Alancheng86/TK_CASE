@@ -180,11 +180,19 @@ int main(void)
 //***************************废话说完了好像************************************
 				 
 		STM32_Init_SSD2828();					 //----	---对SSD2828&LCD 初始化	
+//        TSL_GPIO_Config();
+////	//-----------------------------?????---------------------------------------
+//     
+//	 M2481_EN_Pin_Configuration();	
+//   PWM_Pin_configuration();  //??PWM 
+//	 TIM4_Configuration();			//??PWM  
+//	 M2481_PWM_scan(1); 
+////--------------------------------------------------------------------------------
 	  EXTI_Configuration();        
 		
 while (1)
 	{
-		Allcolor(0,WHITE_bmp);		     DelayMs(100);//刷白
+		Allcolor(1,WHITE_bmp);		     DelayMs(100);//刷白
 
 		////////以下代碼內部測試用。。。
 //	mm_KEY_UP = KEY_UP;
@@ -202,7 +210,7 @@ while (1)
 ////判斷ID是否未燒	 	
 //    	CHECK_ID_again();
 //		mm_KEY_DOWN = KEY_AUTO_MODE;
-//		ID_RIGHT=ID_CHECK();
+		ID_RIGHT=ID_CHECK();
 //		if((mm_KEY_DOWN!=0)&&(ID_RIGHT==1))
 //		{	
 //		  OTP_ID_NG();
@@ -218,25 +226,26 @@ while (1)
 //2015.4.11该型号WDT要求只烧VCOM
 
 		ShowTxt("48,20,299, ");	  				             DelayMs(150);
-//		Allcolor(1,BLACK_bmp);		     DelayMs(100);//刷白
-        showbmp (1);	                  DelayMs(120); 
         ShowTxt("60,20,0,052WA51_V1");	  				       DelayMs(150);	
         ShowTxt("60,20,100,FT8006M");	  				       DelayMs(150);	
-    //ShowTxt("60,20,80,TK_test");	  				 DelayMs(150);		
-		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
+		ShowTxt("48,20,299, ");	  				             DelayMs(150);
 		
 		ShowData_hex("30,450,1000", OTP_VALUE1);			   DelayMs(80);
-		ShowData_hex("30,450,1030", OTP_VALUE2);			   DelayMs(80);
-		ShowData_hex("30,450,1060", OTP_TIMES);			     DelayMs(80);
+//		ShowData_hex("30,450,1030", OTP_VALUE2);			   DelayMs(80);
+//		ShowData_hex("30,450,1060", OTP_TIMES);			     DelayMs(80);
 	
-		switch(OTP_TIMES)
+		switch(OTP_VALUE1)
 		{
-			case 0x00: ShowTxt("60,20,1000,烧入0次");	   					DelayMs(150);   break;
-		  case 0x01: ShowTxt("60,20,1000,烧入1次");	   					DelayMs(150);   break; 
-		  case 0x03: ShowTxt("60,20,1000,烧入2次");	   					DelayMs(150);   break; 
-			case 0x07: ShowTxt("60,20,1000,烧入3次");	            DelayMs(150);   break;		
+			case 0xA1: ShowTxt("60,20,1000,烧入0次");	   					DelayMs(150);   break;
+//		    case 0x01: ShowTxt("60,20,1000,烧入1次");	   					DelayMs(150);   break; 
+//		    case 0x03: ShowTxt("60,20,1000,烧入2次");	   					DelayMs(150);   break; 
+//			case 0x07: ShowTxt("60,20,1000,烧入3次");	                    DelayMs(150);   break;
+            default:
+                ShowTxt("60,20,1000,已烧入");	   					DelayMs(150);   break; 
+                break;
 		}
 		DelayKEY(350);
+//        while(1);
 		
 /************************2014.10.30**************************************/
 //		mm_KEY_DOWN = KEY_AUTO_MODE;

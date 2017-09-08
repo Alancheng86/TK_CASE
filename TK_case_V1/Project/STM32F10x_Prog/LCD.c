@@ -2028,24 +2028,31 @@ u16  HFP= 48;     //
 u16	 HPW=10;  //通常不需要调整
 
 u16	 VPW=4;  //通常不需要调整
-/////////////080WQ USE    inition/////
+///////////// USE    inition/////
 u8 PIC_NUM=13;       //電測畫面总数
-u8 Flicker_OTP=1;    //OTP flicker 畫面編號
-u8 Flicker_OQC=1;    //QC flicker  畫面編號
+u8 Flicker_OTP=8;    //OTP flicker 畫面編號
+u8 Flicker_OQC=8;    //QC flicker  畫面編號
 //-------------------------------------------------------------------
 //vcom阶次设定方式
 void VCOM_set(u8 vcom)
 {
     
-    MIPI_SPI_Write( 2, 0xE0,0x01); 
-    MIPI_SPI_Write( 2, 0x01,0X55);
-    MIPI_SPI_Write( 2, 0xE0,0x00); 
-    DelayMs( 20);
+//    MIPI_SPI_Write( 2, 0xE0,0x01); 
+//    MIPI_SPI_Write( 2, 0x01,0X55);
+//    MIPI_SPI_Write( 2, 0xE0,0x00); 
+//    DelayMs( 20);
+//    
+//     MIPI_SPI_Write( 2, 0xE0,0x01); 
+//    
+//    MIPI_SPI_Write( 2, 0x00,0x00); 
+//    MIPI_SPI_Write( 2, 0x01,vcom);
     
-     MIPI_SPI_Write( 2, 0xE0,0x01); 
-    
-    MIPI_SPI_Write( 2, 0x00,0x00); 
-    MIPI_SPI_Write( 2, 0x01,vcom);
+    ////# Vcom setting Sequence
+    MIPI_SPI_Write( 2,0x51 ,0x03);     ////#Bank Select
+
+    ////# VCOM setting (Best VCOM)
+    MIPI_SPI_Write( 2,0x80 ,vcom);   //???????VCOM?
+
 
 }   
 //ID值设定方式
