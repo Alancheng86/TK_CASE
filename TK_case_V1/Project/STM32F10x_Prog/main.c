@@ -202,7 +202,7 @@ while (1)
 ////判斷ID是否未燒	 	
 //    	CHECK_ID_again();
 //		mm_KEY_DOWN = KEY_AUTO_MODE;
-		ID_RIGHT=ID_CHECK();
+//		ID_RIGHT=ID_CHECK();
 //		if((mm_KEY_DOWN!=0)&&(ID_RIGHT==1))
 //		{	
 //		  OTP_ID_NG();
@@ -218,7 +218,7 @@ while (1)
 //2015.4.11该型号WDT要求只烧VCOM
 
 		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
-		ShowTxt("60,20,0,080WQ18_V1_JD9366");	  				       DelayMs(150);	
+		ShowTxt("60,20,0,052WA51_V1_FT8006M");	  				       DelayMs(150);	
     //ShowTxt("60,20,80,TK_test");	  				 DelayMs(150);		
 		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
 		
@@ -296,10 +296,10 @@ while (1)
 
 	 {
 //		VCOM_TIMES_Check(0xE8);
-	 	if(OTP_TIMES == 0x00)     //如果一次未燒，提示OTP未燒   
-		{	                         //若IC無回讀次數功能，可將虛線內內容屏蔽
-			OTP_NO();	
-		}		 
+//	 	if(OTP_TIMES == 0x00)     //如果一次未燒，提示OTP未燒   
+//		{	                         //若IC無回讀次數功能，可將虛線內內容屏蔽
+//			OTP_NO();	
+//		}		 
 	 }	
 //*/
 //----------------------------------------------------------------------
