@@ -217,14 +217,17 @@ while (1)
 ////請在此處定義您所需顯示的產品訊息！務必在尾部加上適當延時    ps*-->( min 50 ms )			
 //2015.4.11该型号WDT要求只烧VCOM
 
-		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
-		ShowTxt("60,20,0,052WA51_V1_FT8006M");	  				       DelayMs(150);	
+		ShowTxt("48,20,299, ");	  				             DelayMs(150);
+//		Allcolor(1,BLACK_bmp);		     DelayMs(100);//刷白
+        showbmp (1);	                  DelayMs(120); 
+        ShowTxt("60,20,0,052WA51_V1");	  				       DelayMs(150);	
+        ShowTxt("60,20,100,FT8006M");	  				       DelayMs(150);	
     //ShowTxt("60,20,80,TK_test");	  				 DelayMs(150);		
 		//ShowTxt("48,20,299, ");	  				             DelayMs(150);
 		
-//		ShowData_hex("30,450,1000", OTP_VALUE1);			   DelayMs(80);
-//		ShowData_hex("30,450,1030", OTP_VALUE2);			   DelayMs(80);
-//		ShowData_hex("30,450,1060", OTP_TIMES);			     DelayMs(80);
+		ShowData_hex("30,450,1000", OTP_VALUE1);			   DelayMs(80);
+		ShowData_hex("30,450,1030", OTP_VALUE2);			   DelayMs(80);
+		ShowData_hex("30,450,1060", OTP_TIMES);			     DelayMs(80);
 	
 		switch(OTP_TIMES)
 		{
@@ -233,7 +236,7 @@ while (1)
 		  case 0x03: ShowTxt("60,20,1000,烧入2次");	   					DelayMs(150);   break; 
 			case 0x07: ShowTxt("60,20,1000,烧入3次");	            DelayMs(150);   break;		
 		}
-		DelayKEY(250);
+		DelayKEY(350);
 		
 /************************2014.10.30**************************************/
 //		mm_KEY_DOWN = KEY_AUTO_MODE;

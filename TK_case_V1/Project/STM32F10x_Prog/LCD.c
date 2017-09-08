@@ -2014,18 +2014,18 @@ void MTP_ID(void)
 
 #ifdef HXD720x1280_052WA51_FT8006M
 //////mipi video mode setting
-u16 value_HighSpeed = 460;      ///520
+u16 value_HighSpeed = 410;      ///520
 u16 value_Lane_select = 4;
    
 u16  VDP= 1280;      
-u16  VBP= 11 ;    //
-u16  VFP= 6 ;    //
+u16  VBP= 31 ;    //
+u16  VFP= 58 ;    //
 
 u16  HDP= 720;     
-u16  HBP= 88;     //	
-u16  HFP= 84;     //	
+u16  HBP= 42;     //	
+u16  HFP= 48;     //	
 
-u16	 HPW=8;  //通常不需要调整
+u16	 HPW=10;  //通常不需要调整
 
 u16	 VPW=4;  //通常不需要调整
 /////////////080WQ USE    inition/////
